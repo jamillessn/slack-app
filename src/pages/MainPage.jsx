@@ -1,17 +1,8 @@
+// App.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ChakraProvider,
-  Box,
-  Flex,
-  Avatar,
-  Input,
-  Button,
-  CSSReset,
-  extendTheme,
-  theme,
-  Text,
-} from '@chakra-ui/react';
+import { ChakraProvider, Box, Flex, Avatar, Input, Button, CSSReset, extendTheme, theme, Text } from '@chakra-ui/react';
+import Sidebar from '../components/Sidebar';
 
 const customTheme = extendTheme({
   styles: {
@@ -36,6 +27,7 @@ const App = () => {
     // Fetch user email from localStorage when the component mounts
     const emailFromLocalStorage = localStorage.getItem('uid');
     setUserEmail(emailFromLocalStorage);
+    setCurrentUser(emailFromLocalStorage);
   }, []);
 
   const users = [
@@ -46,6 +38,7 @@ const App = () => {
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
+    // display the messages between the logged-in user and the selected user
   };
 
   const handleSendClick = () => {
@@ -85,7 +78,7 @@ const App = () => {
             <Flex align="center">
               <Text mr={2}>{userEmail}</Text>
               <Avatar size="sm" src="https://placekitten.com/53/53" />
-              <Button ml={4} onClick={handleSignOut} backgroundColor="#0101FE" color="white" colorScheme='blue'>
+              <Button ml={4} onClick={handleSignOut} backgroundColor="#0101FE" color>
                 Sign Out
               </Button>
             </Flex>
@@ -95,35 +88,11 @@ const App = () => {
         {/* Main Content */}
         <Flex height="100vh">
           {/* Sidebar */}
-          <Box w="25vw" bg="gray.200" p={4}>
-            {/* Search Bar */}
-            <Input
-              mb={4}
-              type="text"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-
-            {/* User List */}
-            {filteredUsers.map((user) => (
-              <Flex
-                key={user.id}
-                align="center"
-                p={2}
-                cursor="pointer"
-                _hover={{ bg: 'gray.300' }}
-                onClick={() => {
-                  handleUserClick(user);
-                  setCurrentUser(user);
-                }}
-              >
-                <Avatar size="sm" src={user.avatar} />
-                <Text ml={2}>{user.name}</Text>
-              </Flex>
-            ))}
-
-          </Box>
+          <Sidebar
+            filteredUsers={filteredUsers}
+            handleUserClick={handleUserClick}
+            searchTerm={searchTerm}
+          />
 
           {/* Conversation Panel */}
           <Box w="70vw" p={4} overflowY="auto">

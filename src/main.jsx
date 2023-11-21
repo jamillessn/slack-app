@@ -10,11 +10,10 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
-
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <LandingPage />,
+    element: <LandingPage /> ,
     index: true
   },
   {
@@ -27,8 +26,6 @@ const router = createBrowserRouter([
     // loader: ({params}) => {
     // return fetch(params.conversationId)
     // }
-
-
   }
 ]);
 
