@@ -1,5 +1,7 @@
 import React, {useState} from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import LandingGif from '../assets/landing-gif.gif'
+import  ChatAppLogo  from '../assets/chatapplogo.svg';
 import {
   Button,
   Checkbox,
@@ -63,37 +65,12 @@ export default function Login() {
 //     return {...curState, email: "new email"}
 //   })
 
-async function getAllUsers() {
-  try {
-    const res = await fetch("http://206.189.91.54/api/v1/users", {
-      headers: {
-        "access-token": localStorage.getItem("access-token") || "",
-        "uid": localStorage.getItem("uid") || "",
-        "client": localStorage.getItem("client") || "",
-        "expiry": localStorage.getItem("expiry") || "",
-        "Content-Type": "application/json"
-      }
-    });
-
-    const data = await res.json();
-    console.log(data)
-
-    if (data.status === 401) {
-      localStorage.clear();
-    }
-
-    
-
-  } catch(error) {
-    console.log(error);
-  }
-}
-
 
   return (
-    <Stack minH={'100vh'} direction={{ base: 'column', md: 'row' }}>
-      <Flex p={8} flex={1} align={'center'} justify={'center'}>
-        <Stack spacing={4} w={'full'} maxW={'md'}>
+    <Stack minH={'100vh'} minW={'100vw'} direction={{ base: 'column', md: 'row' }}>
+      <Flex p={4} flex={10} align={'center'} justify={'center'}>
+        <Stack spacing={6} w={'full'} maxW={'md'}>
+          <img src={ChatAppLogo} alt="Logo" width={100}/>
           <Heading fontSize={'2xl'}>Sign in to your account</Heading>
           <FormControl id="email">
             <FormLabel>Email address</FormLabel>
@@ -112,13 +89,15 @@ async function getAllUsers() {
             value = {userInfo.password}
             onChange = {(e) => setUserInfo(curState => ({...curState, password: e.target.value}))}/>
           </FormControl>
-          <Stack spacing={6}>
+          <Stack spacing={5}>
             <Stack
               direction={{ base: 'column', sm: 'row' }}
               align={'start'}
               justify={'space-between'}>
               <Checkbox>Remember me</Checkbox>
-              <Text color={'blue.500'}>Forgot password?</Text>
+              <Link to='/sign_up'>
+              <Text color={'blue.500'}>Not yet a user? Register Now.</Text>
+              </Link>
             </Stack>
             <Button colorScheme={'blue'} variant={'solid'} onClick={() => handleSubmit(userInfo.email,userInfo.password,navigate)}>
               Sign in
@@ -126,14 +105,14 @@ async function getAllUsers() {
           </Stack>
         </Stack>
       </Flex>
-      <Flex flex={1}>
+      <Flex flex={8} justifyContent={'center'}>
         <Image
           alt={'Login Image'}
           objectFit={'cover'}
+          maxHeight="100vh"
           src={
-            'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1352&q=80'
-          }
-        />
+            LandingGif
+          } />
       </Flex>
     </Stack>
   )

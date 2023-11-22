@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import BlueButton from '../components/Button';
+import { Link } from 'react-router-dom';
+
 import {
+  Flex,
+  Box,
   FormControl,
   FormLabel,
   Input,
   Button,
+  Text,
+  Stack
 } from '@chakra-ui/react';
-import { redirect } from 'react-router-dom';
+import { Navigate, redirect } from 'react-router-dom';
 
 const handleSubmit = async (email, password) => {
 
@@ -34,8 +41,10 @@ const handleSubmit = async (email, password) => {
     console.log(responseData)
 
     if(responseData.status === "success"){
-      toast('Registration successful.')
-      redirect("login")
+      toast.success('Registration successful.', {
+        position: toast.POSITION.TOP_CENTER,
+      });
+      Navigate("/")
     }
 
     if(responseData.status === "error"){
@@ -46,7 +55,7 @@ const handleSubmit = async (email, password) => {
   } catch (error) {
       console.log(error)
       toast.error(error.errors.full_messages[0], {
-        position: toast.POSITION.TOP_RIGHT,
+        position: toast.POSITION.TOP_CENTER,
       });
   }
 };
@@ -65,11 +74,27 @@ function Register() {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     handleSubmit(email, password);
+    Navigate("/")
   };
 
   return (
     <>
-     
+     <Flex
+      align="center"
+      justify="center"
+      height="100vh"
+      bgColor="#0101FE"
+      minW={'100vw'}
+      p={4}
+      
+    >
+      <Box
+        p={8}
+        width={{ base: '90%', sm: '80%', md: '50%' }}
+        bg="white"
+        boxShadow="lg"
+        borderRadius="md"
+      >
       <FormControl isRequired>
         <FormLabel>Name</FormLabel>
         <Input 
@@ -106,15 +131,33 @@ function Register() {
         id='conf_password' 
         onChange={handleConfPasswordChange }/>
 
-        <Button
-          mt={4}
-          colorScheme='teal'
-          onClick={handleFormSubmit}
-          type='submit'
-        >
-          Submit
-        </Button>
+        <Stack
+          direction={{base: 'column', sm: 'row'}}
+          align = {'center'}
+          justify={'space-between'}
+          >
+            <Link to='/'>
+                <Text color={'blue.500'}> Back to Login </Text>
+            </Link>
+
+            <Button
+              mt={4}
+              colorScheme='blue'
+              onClick={handleFormSubmit}
+              type='submit'
+              bgColor='#0101FE'
+            >
+              Submit
+            </Button>
+
+            
+
+        </Stack>
+        
+        
       </FormControl>
+      </Box>
+      </Flex>
     </>
   );
 }

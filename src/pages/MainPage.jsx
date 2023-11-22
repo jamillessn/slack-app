@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet, useLoaderData } from 'react-router-dom';
 import { ChakraProvider, Box, Flex, Avatar, Input, Button, CSSReset, extendTheme, theme, Text } from '@chakra-ui/react';
 import Sidebar from '../components/Sidebar';
+import ChatAppLogo from '../assets/chatapplogo.svg';
 
 const customTheme = extendTheme({
   styles: {
@@ -15,12 +16,16 @@ const customTheme = extendTheme({
 
 const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedChannel, setSelectedChannel] = useState(null);
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [conversation, setConversation] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const [userEmail, setUserEmail] = useState(null); // Added state for user email
+  const [userEmail, setUserEmail] = useState(null);
+  const [channels, setChannels] = useState([]);
   const navigate = useNavigate();
+
+  getAllUsers();
 
   useEffect(() => {
     const emailFromLocalStorage = localStorage.getItem('uid');
@@ -28,15 +33,75 @@ const App = () => {
     setCurrentUser(emailFromLocalStorage);
   }, []);
 
+  async function getAllUsers() {
+    try {
+      const res = await fetch("http://206.189.91.54/api/v1/users",{
+        method: 'GET',
+        headers: {
+          "access-token": localStorage.getItem("access-token") || "",
+          "uid": localStorage.getItem("uid") || "",
+          "client": localStorage.getItem("client") || "",
+          "expiry": localStorage.getItem("expiry") || "",
+          "Content-Type": "application/json"
+        }
+      });
+  
+      const data = await res.json();
+      console.log(data)
+  
+      if (data.status === 401) {
+      localStorage.clear();
+      }
+  
+    } catch(error) {
+      console.log(error);
+    }
+  }
+
+  async function retrieveMessages() {
+
+    try {
+      const res = await fetch("http://206.189.91.54/api/v1/messages", {
+      method: 'POST',
+      headers: {
+          "access-token": localStorage.getItem("access-token") || "",
+          "uid": localStorage.getItem("uid") || "",
+          "client": localStorage.getItem("client") || "",
+          "expiry": localStorage.getItem("expiry") || "",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(message)
+      });
+
+      const newMessage = {
+        receiver_id: localStorage.getItem("uid")
+        // receiver_class: "User",
+        // body: messageBody,
+      };
+  
+      const data = await res.json();
+      console.log(data)
+  
+      if (data.status === 401) {
+      localStorage.clear();
+      }
+  
+    } catch(error) {
+      console.log(error);
+    }
+  }
+  
   const users = [
     { id: 1, name: 'John Doe', avatar: 'https://placekitten.com/50/50' },
     { id: 2, name: 'Jane Doe', avatar: 'https://placekitten.com/51/51' },
-    { id: 3, name: 'Keith Smith', avatar: 'https://placekitten.com/52/52' },
   ];
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
-    // display the messages between the logged-in user and the selected user
+  };
+
+  const handleChannelClick = (channel) => {
+    setSelectedChannel(channel);
   };
 
   const handleSendClick = () => {
@@ -50,8 +115,16 @@ const App = () => {
     setCurrentUser(null);
     setSelectedUser(null);
     setConversation([]);
-    localStorage.clear(); // Clear all localStorage data
+    localStorage.clear();
     navigate('/');
+  };
+
+  const createChannel = (channelName) => {
+    setChannels([...channels, { name: channelName, members: [currentUser], messages: [] }]);
+  };
+
+  const joinChannel = (channel) => {
+    setSelectedUser(channel);
   };
 
   const filteredUsers = users.filter((user) =>
@@ -71,12 +144,13 @@ const App = () => {
           borderBottom="1px"
           borderColor="gray.200"
         >
-          <Text fontSize="lg">ChatApp</Text>
+          <img src={ChatAppLogo} alt="Logo" width={60} /> 
+
           {userEmail && (
             <Flex align="center">
               <Text mr={2}>{userEmail}</Text>
               <Avatar size="sm" src="https://placekitten.com/53/53" />
-              <Button ml={4} onClick={handleSignOut} backgroundColor="#0101FE" color>
+              <Button ml={4} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
                 Sign Out
               </Button>
             </Flex>
@@ -89,8 +163,13 @@ const App = () => {
           <Sidebar
             filteredUsers={filteredUsers}
             handleUserClick={handleUserClick}
+            handleChannelClick = {handleChannelClick}
             searchTerm={searchTerm}
+            createChannel={createChannel}
+            channels={channels}
           />
+
+          <Outlet />
 
           {/* Conversation Panel */}
           <Box w="70vw" p={4} overflowY="auto">
@@ -98,16 +177,32 @@ const App = () => {
               <Flex direction="column" align="center">
                 <Avatar size="lg" src={selectedUser.avatar} />
                 <Text mt={4} fontSize="xl">
-                  Conversation with {selectedUser.name}
+                  {selectedUser.name}
                 </Text>
                 <Box mt={4} mb={4} w="100%" flex="1" display="flex" flexDirection="column">
-                  {conversation.map((item, index) => (
-                    <Box key={index} mb={2}>
-                      <Text fontWeight="bold">{item.user.name}:</Text>
-                      <Text>{item.message}</Text>
-                    </Box>
-                  ))}
+                  {selectedUser.messages &&
+                    selectedUser.messages.map((item, index) => (
+                      <Box key={index} mb={2}>
+                        <Text fontWeight="bold">{item.user.name}:</Text>
+                        <Text>{item.message}</Text>
+                      </Box>
+                    ))}
                 </Box>
+
+              {/* {searchFocused ? (
+                <>
+                  {searchData?.data.map((user:IUser) => (
+                    <UserNavLink
+                      key = {user.id}
+                      path = {user.id}
+                      firstLetter = {user.username.split('')[0]}
+                      username = {user.username}
+                    />
+                  ))}
+                </>
+              ): (
+
+              )} */}
                 {/* Message Box and Send Button */}
                 <Flex w="100%">
                   <Input
@@ -122,7 +217,7 @@ const App = () => {
                 </Flex>
               </Flex>
             ) : (
-              <Text>Please select a user to start a conversation.</Text>
+              <Text>Please select a user or channel to start a conversation.</Text>
             )}
           </Box>
         </Flex>
