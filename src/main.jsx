@@ -8,6 +8,7 @@ import './index.css'
 import { ChakraProvider } from "@chakra-ui/react"
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ConversationPanel } from './components/ConversationPanel'
 
 
 const router = createBrowserRouter([
@@ -23,9 +24,21 @@ const router = createBrowserRouter([
   {
     path: '/app',
     element: <MainPage />,
-    // loader: ({params}) => {
-    // return fetch(params.conversationId)
-    // }
+    loader: async ({params}) => {
+    return fetch(params.conversationId)
+    },
+    children: [
+      {
+        path: "c/:user_id",
+        element: <ConversationPanel />,
+        loader: async ({params}) => {
+          //fetch get all messages using params.user_id
+          // return await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
+          const data = await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
+          return { user_id: params.user_id, data}
+        }
+      }
+    ]
   }
 ]);
 
