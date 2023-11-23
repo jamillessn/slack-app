@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import BlueButton from '../components/Button';
-import { Link } from 'react-router-dom';
-
 import {
   Flex,
   Box,
@@ -13,54 +10,11 @@ import {
   Text,
   Stack
 } from '@chakra-ui/react';
-import { Navigate, redirect } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-const handleSubmit = async (email, password) => {
-
-  try {
-    const res = await fetch("http://206.189.91.54/api/v1/auth/", {
-      method: "POST",
-      headers: {
-        "access-token": localStorage.getItem("access-token") || "",
-        "uid": localStorage.getItem("uid") || "",
-        "client": localStorage.getItem("client") || "",
-        "expiry": localStorage.getItem("expiry") || "",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email: email, password: password })
-    });
-
-   localStorage.setItem("access-token", res.headers.get("access-token"))
-
-    console.log(res.headers.get("uid"));
-    console.log(res.headers.get("access-token"));
-    console.log(res.headers.get("expiry"));
-    console.log(res.headers.get("client"));
-
-    const responseData = await res.json();
-    console.log(responseData)
-
-    if(responseData.status === "success"){
-      toast.success('Registration successful.', {
-        position: toast.POSITION.TOP_CENTER,
-      });
-      Navigate("/")
-    }
-
-    if(responseData.status === "error"){
-      throw responseData
-    }
-    
-
-  } catch (error) {
-      console.log(error)
-      toast.error(error.errors.full_messages[0], {
-        position: toast.POSITION.TOP_CENTER,
-      });
-  }
-};
 
 function Register() {
+  const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,8 +28,54 @@ function Register() {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     handleSubmit(email, password);
-    Navigate("/")
+    navigate("/")
   };
+
+  const handleSubmit = async (email, password) => {
+
+    try {
+      const res = await fetch("http://206.189.91.54/api/v1/auth/", {
+        method: "POST",
+        headers: {
+          "access-token": localStorage.getItem("access-token") || "",
+          "uid": localStorage.getItem("uid") || "",
+          "client": localStorage.getItem("client") || "",
+          "expiry": localStorage.getItem("expiry") || "",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: email, password: password })
+      });
+  
+     localStorage.setItem("access-token", res.headers.get("access-token"))
+  
+      console.log(res.headers.get("uid"));
+      console.log(res.headers.get("access-token"));
+      console.log(res.headers.get("expiry"));
+      console.log(res.headers.get("client"));
+  
+      const responseData = await res.json();
+      console.log(responseData)
+  
+      if(responseData.status === "success"){
+        toast.success('Registration successful.', {
+          position: toast.POSITION.TOP_CENTER,
+        });
+        navigate("/")
+      }
+  
+      if(responseData.status === "error"){
+        throw responseData
+      }
+      
+  
+    } catch (error) {
+        console.log(error)
+        toast.error(error.errors.full_messages[0], {
+          position: toast.POSITION.TOP_CENTER,
+        });
+    }
+  };
+  
 
   return (
     <>
@@ -150,11 +150,7 @@ function Register() {
               Submit
             </Button>
 
-            
-
         </Stack>
-        
-        
       </FormControl>
       </Box>
       </Flex>

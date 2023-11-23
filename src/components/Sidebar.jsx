@@ -1,104 +1,90 @@
-import React, { useState } from 'react';
-import { Box, Flex, Input, Button, Avatar, Text } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Flex,
+  Input,
+  Button,
+  Avatar,
+  Text,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+} from '@chakra-ui/react';
+import { Link } from 'react-router-dom';
 
-// function UserNavLink ({
-//   firstLetter,
-//   username,
-//   path
-// }: {
-//   firstLetter: string;
-//   username: string;
-//   path: number
-// }) {
-//   return ( 
-//     <Flex
-//           key={user.id}
-//           align="center"
-//           p={2}
-//           cursor="pointer"
-//           _hover={{ bg: 'gray.300' }}
-//           onClick={() => {
-//             handleUserClick(user);
-//           }}
-//         >
-//           <Avatar size="sm" src={user.avatar} />
-//           <Text ml={2}>{user.name}</Text>
-//         </Flex>
-//   );
-// }
-const Sidebar = ({ filteredUsers, handleUserClick, createChannel, channels, handleChannelClick }) => {
-  const [channelName, setChannelName] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleCreateChannel = () => {
-    if (channelName.trim() !== '') {
-      createChannel(channelName);
-      setChannelName('');
+const Sidebar = () => {
+  const [searchedUser, setSearchedUser] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [usersList, setUsersList] = useState([]);
+  
+
+  async function getAllUsers() {
+
+    try {
+      const res = await fetch("http://206.189.91.54/api/v1/users",{
+        method: 'GET',
+        headers: {
+          "access-token": localStorage.getItem("access-token") || "",
+          "uid": localStorage.getItem("uid") || "",
+          "client": localStorage.getItem("client") || "",
+          "expiry": localStorage.getItem("expiry") || "",
+          "Content-Type": "application/json"
+        }
+      });
+  
+      const data = await res.json();
+      const dataLength = data.data.length
+      let dataLengthless = dataLength - 100;
+
+      console.log(data)
+  
+      setUsersList(data.data.slice(dataLengthless, dataLength).map(user => ({ user_id: user.id, email: user.email })));
+      
+    } catch(error) {
+      console.log(error);
     }
-  };
+  }
+  
+  useEffect(() => {
+    getAllUsers();
+  }, []);
 
+  useEffect(() => {
+    // Filter users based on the search input
+    setFilteredUsers(
+      usersList.filter((user) =>
+        user.email.toLowerCase().includes(searchedUser.toLowerCase())
+      )
+    );
+  }, [searchedUser, usersList]);
+  
   return (
-    <Box w="25vw" bg="gray.200" p={4}>
+    <Box w="25vw" bg="gray.200" p={4} height="100vh">
       {/* Search Bar */}
       <Input
         mb={4}
         type="text"
         placeholder="Search users..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        value={searchedUser}
+        onChange={(e) => setSearchedUser(e.target.value)}
       />
 
-      {/* Create Channel Button and Input */}
-      <Flex mb={4}>
-        <Input
-          placeholder="Channel name"
-          value={channelName}
-          onChange={(e) => setChannelName(e.target.value)}
-          mr={2}
-        />
-        <Button onClick={handleCreateChannel} colorScheme="blue" backgroundColor={'#0101FE'}>
-          Create Channel
-        </Button>
+      {/* Display Filtered Users as Styled Entries */}
+      <Flex direction="column">
+        {filteredUsers.map((user) => (
+          <Link to={`/app/c/${user.user_id}`} key={user.user_id}>
+            <Flex align="center" mb={2}>
+              <Avatar size="sm" marginRight={2}></Avatar>
+              <Text>{user.email}</Text>
+            </Flex>
+          </Link>
+        ))}
       </Flex>
 
-      {/* User List */}
-      {filteredUsers.map((user) => (
-        <Flex
-          key={user.id}
-          align="center"
-          p={2}
-          cursor="pointer"
-          _hover={{ bg: 'gray.300' }}
-          onClick={() => {
-            handleUserClick(user);
-          }}
-        >
-          <Avatar size="sm" src={user.avatar} />
-          <Text ml={2}>{user.name}</Text>
-        </Flex>
-      ))}
-
-      {/* Channels */}
-      <Text fontWeight="bold" mb={2}>
-        Channels
-      </Text>
-      {channels.map((channel) => (
-        <Flex
-          key={channel.name}
-          align="center"
-          p={2}
-          cursor="pointer"
-          _hover={{ bg: 'gray.300' }}
-          onClick={() => {
-            handleChannelClick(channel);
-          }}
-        >
-          <Avatar size="sm" src="https://placekitten.com/50/50" />
-          <Text ml={2}>{channel.name}</Text>
-        </Flex>
-      ))}
     </Box>
   );
 };
 
-export default Sidebar;
+export default Sidebar

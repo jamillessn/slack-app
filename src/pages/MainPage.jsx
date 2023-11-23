@@ -3,6 +3,7 @@ import { useNavigate, Outlet, useLoaderData } from 'react-router-dom';
 import { ChakraProvider, Box, Flex, Avatar, Input, Button, CSSReset, extendTheme, theme, Text } from '@chakra-ui/react';
 import Sidebar from '../components/Sidebar';
 import ChatAppLogo from '../assets/chatapplogo.svg';
+import { ConversationPanel } from '../components/ConversationPanel';
 
 const customTheme = extendTheme({
   styles: {
@@ -23,40 +24,18 @@ const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
   const [channels, setChannels] = useState([]);
-  const navigate = useNavigate();
+  
 
-  getAllUsers();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const emailFromLocalStorage = localStorage.getItem('uid');
     setUserEmail(emailFromLocalStorage);
     setCurrentUser(emailFromLocalStorage);
+    
   }, []);
 
-  async function getAllUsers() {
-    try {
-      const res = await fetch("http://206.189.91.54/api/v1/users",{
-        method: 'GET',
-        headers: {
-          "access-token": localStorage.getItem("access-token") || "",
-          "uid": localStorage.getItem("uid") || "",
-          "client": localStorage.getItem("client") || "",
-          "expiry": localStorage.getItem("expiry") || "",
-          "Content-Type": "application/json"
-        }
-      });
   
-      const data = await res.json();
-      console.log(data)
-  
-      if (data.status === 401) {
-      localStorage.clear();
-      }
-  
-    } catch(error) {
-      console.log(error);
-    }
-  }
 
   async function retrieveMessages() {
 
@@ -80,7 +59,6 @@ const App = () => {
       };
   
       const data = await res.json();
-      console.log(data)
   
       if (data.status === 401) {
       localStorage.clear();
@@ -90,11 +68,6 @@ const App = () => {
       console.log(error);
     }
   }
-  
-  const users = [
-    { id: 1, name: 'John Doe', avatar: 'https://placekitten.com/50/50' },
-    { id: 2, name: 'Jane Doe', avatar: 'https://placekitten.com/51/51' },
-  ];
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
@@ -127,9 +100,6 @@ const App = () => {
     setSelectedUser(channel);
   };
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <ChakraProvider theme={customTheme}>
@@ -149,7 +119,7 @@ const App = () => {
           {userEmail && (
             <Flex align="center">
               <Text mr={2}>{userEmail}</Text>
-              <Avatar size="sm" src="https://placekitten.com/53/53" />
+              <Avatar size="sm"  />
               <Button ml={4} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
                 Sign Out
               </Button>
@@ -161,7 +131,6 @@ const App = () => {
         <Flex height="100vh">
           {/* Sidebar */}
           <Sidebar
-            filteredUsers={filteredUsers}
             handleUserClick={handleUserClick}
             handleChannelClick = {handleChannelClick}
             searchTerm={searchTerm}
@@ -188,21 +157,9 @@ const App = () => {
                       </Box>
                     ))}
                 </Box>
+                <ConversationPanel />
 
-              {/* {searchFocused ? (
-                <>
-                  {searchData?.data.map((user:IUser) => (
-                    <UserNavLink
-                      key = {user.id}
-                      path = {user.id}
-                      firstLetter = {user.username.split('')[0]}
-                      username = {user.username}
-                    />
-                  ))}
-                </>
-              ): (
-
-              )} */}
+             
                 {/* Message Box and Send Button */}
                 <Flex w="100%">
                   <Input

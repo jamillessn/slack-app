@@ -33,8 +33,9 @@ const router = createBrowserRouter([
         element: <ConversationPanel />,
         loader: async ({params}) => {
           //fetch get all messages using params.user_id
-          fetch (`receiver_id = ${params.user_id}`)
-          // return params.user_id
+          // return await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
+          const data = await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
+          return { user_id: params.user_id, data}
         }
       }
     ]
