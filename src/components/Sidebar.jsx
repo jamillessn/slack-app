@@ -6,49 +6,23 @@ import {
   Button,
   Avatar,
   Text,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
+import { getAllUsers } from '../utils/api';
 
 
-const Sidebar = () => {
+const Sidebar = ({ onSelectUser }) => {
   const [searchedUser, setSearchedUser] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [usersList, setUsersList] = useState([]);
-  
 
-  async function getAllUsers() {
-
-    try {
-      const res = await fetch("http://206.189.91.54/api/v1/users",{
-        method: 'GET',
-        headers: {
-          "access-token": localStorage.getItem("access-token") || "",
-          "uid": localStorage.getItem("uid") || "",
-          "client": localStorage.getItem("client") || "",
-          "expiry": localStorage.getItem("expiry") || "",
-          "Content-Type": "application/json"
-        }
-      });
-  
-      const data = await res.json();
-      const dataLength = data.data.length
-      let dataLengthless = dataLength - 100;
-
-      console.log(data)
-  
-      setUsersList(data.data.slice(dataLengthless, dataLength).map(user => ({ user_id: user.id, email: user.email })));
-      
-    } catch(error) {
-      console.log(error);
-    }
-  }
-  
   useEffect(() => {
-    getAllUsers();
+    async function fetchData() {
+      const users = await getAllUsers();
+      setUsersList(users);
+    }
+
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -61,7 +35,7 @@ const Sidebar = () => {
   }, [searchedUser, usersList]);
   
   return (
-    <Box w="25vw" bg="gray.200" p={4} height="100vh">
+    <Box w="25vw" bg="gray.200" p={4} overflowY="scroll">
       {/* Search Bar */}
       <Input
         mb={4}
@@ -71,10 +45,14 @@ const Sidebar = () => {
         onChange={(e) => setSearchedUser(e.target.value)}
       />
 
-      {/* Display Filtered Users as Styled Entries */}
+      {/* Display filtered users */}
       <Flex direction="column">
         {filteredUsers.map((user) => (
-          <Link to={`/app/c/${user.user_id}`} key={user.user_id}>
+          <Link 
+            to={`/app/c/${user.user_id}`} 
+            key={user.user_id}
+            onClick={() => onSelectUser(user)}
+            >
             <Flex align="center" mb={2}>
               <Avatar size="sm" marginRight={2}></Avatar>
               <Text>{user.email}</Text>

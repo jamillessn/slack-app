@@ -24,18 +24,18 @@ const router = createBrowserRouter([
   {
     path: '/app',
     element: <MainPage />,
-    loader: async ({params}) => {
-    return fetch(params.conversationId)
-    },
+    // loader: async ({params}) => {
+    // return fetch(params.conversationId)
+    // },
     children: [
       {
-        path: "c/:user_id",
+        path: "c/:receiver_id",
         element: <ConversationPanel />,
         loader: async ({params}) => {
-          //fetch get all messages using params.user_id
-          // return await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
-          const data = await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
-          return { user_id: params.user_id, data}
+          //fetch get all messages using params.receiver_id
+          // return await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`)
+          const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`)
+          return { receiver_id: params.receiver_id, messages: data.body}
         }
       }
     ]

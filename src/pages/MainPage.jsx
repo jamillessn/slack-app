@@ -25,6 +25,10 @@ const App = () => {
   const [userEmail, setUserEmail] = useState(null);
   const [channels, setChannels] = useState([]);
   
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+    // console.log("Selected user:" + user.email)
+  };
 
   const navigate = useNavigate();
 
@@ -32,57 +36,7 @@ const App = () => {
     const emailFromLocalStorage = localStorage.getItem('uid');
     setUserEmail(emailFromLocalStorage);
     setCurrentUser(emailFromLocalStorage);
-    
   }, []);
-
-  
-
-  async function retrieveMessages() {
-
-    try {
-      const res = await fetch("http://206.189.91.54/api/v1/messages", {
-      method: 'POST',
-      headers: {
-          "access-token": localStorage.getItem("access-token") || "",
-          "uid": localStorage.getItem("uid") || "",
-          "client": localStorage.getItem("client") || "",
-          "expiry": localStorage.getItem("expiry") || "",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(message)
-      });
-
-      const newMessage = {
-        receiver_id: localStorage.getItem("uid")
-        // receiver_class: "User",
-        // body: messageBody,
-      };
-  
-      const data = await res.json();
-  
-      if (data.status === 401) {
-      localStorage.clear();
-      }
-  
-    } catch(error) {
-      console.log(error);
-    }
-  }
-
-  const handleUserClick = (user) => {
-    setSelectedUser(user);
-  };
-
-  const handleChannelClick = (channel) => {
-    setSelectedChannel(channel);
-  };
-
-  const handleSendClick = () => {
-    if (message.trim() !== '') {
-      setConversation([...conversation, { user: currentUser, message }]);
-      setMessage('');
-    }
-  };
 
   const handleSignOut = () => {
     setCurrentUser(null);
@@ -96,10 +50,13 @@ const App = () => {
     setChannels([...channels, { name: channelName, members: [currentUser], messages: [] }]);
   };
 
-  const joinChannel = (channel) => {
-    setSelectedUser(channel);
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
   };
 
+  const handleChannelClick = (channel) => {
+    setSelectedChannel(channel);
+  };
 
   return (
     <ChakraProvider theme={customTheme}>
@@ -129,6 +86,7 @@ const App = () => {
 
         {/* Main Content */}
         <Flex height="100vh">
+
           {/* Sidebar */}
           <Sidebar
             handleUserClick={handleUserClick}
@@ -136,47 +94,14 @@ const App = () => {
             searchTerm={searchTerm}
             createChannel={createChannel}
             channels={channels}
+            onSelectUser={handleSelectUser}
           />
 
-          <Outlet />
-
           {/* Conversation Panel */}
-          <Box w="70vw" p={4} overflowY="auto">
-            {selectedUser ? (
-              <Flex direction="column" align="center">
-                <Avatar size="lg" src={selectedUser.avatar} />
-                <Text mt={4} fontSize="xl">
-                  {selectedUser.name}
-                </Text>
-                <Box mt={4} mb={4} w="100%" flex="1" display="flex" flexDirection="column">
-                  {selectedUser.messages &&
-                    selectedUser.messages.map((item, index) => (
-                      <Box key={index} mb={2}>
-                        <Text fontWeight="bold">{item.user.name}:</Text>
-                        <Text>{item.message}</Text>
-                      </Box>
-                    ))}
-                </Box>
-                <ConversationPanel />
+          <Outlet 
+          selectedUser={selectedUser}
+          />
 
-             
-                {/* Message Box and Send Button */}
-                <Flex w="100%">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    mr={2}
-                  />
-                  <Button onClick={handleSendClick} colorScheme="teal">
-                    Send
-                  </Button>
-                </Flex>
-              </Flex>
-            ) : (
-              <Text>Please select a user or channel to start a conversation.</Text>
-            )}
-          </Box>
         </Flex>
       </Box>
     </ChakraProvider>
