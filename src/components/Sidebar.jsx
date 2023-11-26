@@ -3,12 +3,11 @@ import {
   Box,
   Flex,
   Input,
-  Button,
   Avatar,
   Text,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
-import { getAllUsers } from '../utils/api';
+import { getAllUsers } from '../utils/getAllUsers';
 
 
 const Sidebar = ({ onSelectUser }) => {
