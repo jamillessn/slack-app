@@ -1,19 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Flex,
   Input,
-  Avatar,
   Text,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
-import { getAllUsers } from '../utils/getAllUsers';
+import { getAllUsers } from '../utils/api';
 
 
-const Sidebar = ({ onSelectUser }) => {
+const Sidebar = () => {
   const [searchedUser, setSearchedUser] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [usersList, setUsersList] = useState([]);
+  const [selectedUser, setSelectedUser] = useState([]);
+  localStorage.setItem("selectedUser", selectedUser)
+  
+  const handleSelectUser = (user) => {
+    setSelectedUser(user.email);
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -25,7 +30,7 @@ const Sidebar = ({ onSelectUser }) => {
   }, []);
 
   useEffect(() => {
-    // Filter users based on the search input
+    // Filter users when typing on search bar
     setFilteredUsers(
       usersList.filter((user) =>
         user.email.toLowerCase().includes(searchedUser.toLowerCase())
@@ -34,13 +39,14 @@ const Sidebar = ({ onSelectUser }) => {
   }, [searchedUser, usersList]);
   
   return (
-    <Box w="25vw" bg="gray.200" p={4} overflowY="scroll">
+    <Box w="30vw" bg="gray.200" p={4} overflowY="scroll">
       {/* Search Bar */}
       <Input
         mb={4}
         type="text"
         placeholder="Search users..."
         value={searchedUser}
+        bgColor= "white"
         onChange={(e) => setSearchedUser(e.target.value)}
       />
 
@@ -50,10 +56,25 @@ const Sidebar = ({ onSelectUser }) => {
           <Link 
             to={`/app/c/${user.user_id}`} 
             key={user.user_id}
-            onClick={() => onSelectUser(user)}
+            onClick={() => handleSelectUser(user)}
             >
             <Flex align="center" mb={2}>
-              <Avatar size="sm" marginRight={2}></Avatar>
+
+              <Box
+                w={8}
+                h={8}
+                rounded="full"
+                bg="black"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                color="white"
+                marginRight={2}
+              >
+                <Text fontSize="sm" fontWeight="bold">
+                  {user.email.charAt(0).toUpperCase()}
+                </Text>
+              </Box>
               <Text>{user.email}</Text>
             </Flex>
           </Link>

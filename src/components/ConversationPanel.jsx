@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Box, Flex, Avatar, Input, Button, Text } from '@chakra-ui/react';
 import { useLoaderData } from 'react-router-dom'
 import { toast } from 'react-toastify';
-import { getAllUsers } from '../utils/getAllUsers';
+import { getAllUsers } from '../utils/api';
 import { getHeaders } from '../utils/getHeaders';
 
 export const ConversationPanel = () => {
   const [selectedUser, setSelectedUser] = useState(null);
-  const [conversationsList, setList] = useState([])
+  // const [conversationsList, setList] = useState([])
   const headers = getHeaders();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]); // Maintain a list of messages
-  const { receiver_id } = useLoaderData()
+  const { receiver_id } = useLoaderData();
+  const scrollRef = useRef(null);
 
  const getMessages = (receiver_id, headers) => {
     const options = {
@@ -41,38 +42,53 @@ export const ConversationPanel = () => {
                 body: item.body,
                 created_at: item.receiver.created_at
             }
-        }
-
-        setMessages({...filteredMessages});
-                // ref.current.scrollIntoView({ behavior: "smooth" });
-            })
             
+        }
+        setMessages({...filteredMessages});
+      })
+
 }
 
-const chatMessages = Object.keys(messages).map(msg => {
+const clearMessages = () => {
+  setMessages([]);
+  setSelectedUser(null);
+}
+
+useEffect(() => {
+  clearMessages();
+  getMessages(receiver_id, headers);
+  setSelectedUser(localStorage.getItem("selectedUser"))
+  getAllUsers();
+  scrollToBottom();
+},[]);
+
+const chatMessages = Object.keys(messages).map(msgId => {
+  const msg = messages[msgId];
+  const isCurrentUser = msg.sender === headers.uid;
+
   return (
-    <>
-      <Text color='black' fontWeight='700'> {messages[msg].sender} </Text>
-         <Text> {messages[msg].created_at} </Text>
-            <Text 
-              p={2} 
-              borderRadius="md" 
-              bgColor={msg.sender === "You" ? 'blue.500' : 'gray.200'}
-              color = {msg.sender === "You" ? 'white' : 'black'}>
-                {messages[msg].body}
-            </Text>
-    </>
-    
-  )
-    
-})
+    <div key={msgId} style={{ textAlign: isCurrentUser ? 'left' : 'right' }}>
+      <Text color='black' fontWeight='700'> {msg.sender} </Text>
+      <Text> {msg.created_at} </Text>
+      <Text 
+        p={2} 
+        borderRadius="md" 
+        display="inline-block" 
+        maxWidth="70%"
+        bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
+        color={isCurrentUser ? 'white' : 'black'}
+      >
+        {msg.body}
+      </Text>
+    </div>
+  );
+});
 
-
-  useEffect(() => {
-    getAllUsers();
-    getMessages(receiver_id,headers);
-  }, []);
-  
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const handleSendClick = () => {
     sendMessage({message, receiver_id, headers});
@@ -84,7 +100,6 @@ const chatMessages = Object.keys(messages).map(msg => {
         e.preventDefault();
         console.log(message);
         const message = e.target.value;
-        // send message
         sendMessage({message, receiver_id, headers});
 
         e.target.value = '';
@@ -122,7 +137,6 @@ const chatMessages = Object.keys(messages).map(msg => {
                 const dm = data.data;
                 const filteredMessage = {};
 
-    
                 filteredMessage[dm.id] = {
                     sender: headers.uid,
                     receiver: '', 
@@ -138,25 +152,39 @@ const chatMessages = Object.keys(messages).map(msg => {
 }
   
   return (
-    <div>
-      <Box w="60vw" maxWidth="100vw" p={7} maxHeight="100vh" overflowY="auto">
+    <div> 
+      {/* Header */}
+      <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
+        <Text fontWeight="bold" fontSize="lg">
+          Chatting with: {selectedUser}
+        </Text>
+      </Box>
+
+      {/* Chat Messages */}
+      <Box minWidth="80vw" p={7} maxHeight="100vh" overflowY="auto">
         <Flex direction ="column">
           {chatMessages}
+          
+          <div ref={scrollRef} /> 
         </Flex>
 
       {/* Message Box and Send Button */}
+      <Flex p={5} paddingTop={8}>
           <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message..."
-            mr={5}
-            onKeyDown={handleEnter}
-          />
-          <Button 
-            onClick={handleSendClick} 
-            colorScheme="blue">
-            Send
-          </Button>
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message..."
+                mr={5}
+                onKeyDown={handleEnter}
+              />
+              <Button 
+                onClick={handleSendClick} 
+                bgColor="#0101FE" 
+                colorScheme="blue">
+                Send
+              </Button>
+        </Flex>
+          
       </Box>
     </div>
   )

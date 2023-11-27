@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Outlet, useLoaderData } from 'react-router-dom';
-import { ChakraProvider, Box, Flex, Avatar, Input, Button, CSSReset, extendTheme, theme, Text } from '@chakra-ui/react';
+import { useNavigate, Outlet, Link, } from 'react-router-dom';
+import { ChakraProvider, Box, Flex, Avatar, Button, CSSReset, extendTheme, Text } from '@chakra-ui/react';
 import Sidebar from '../components/Sidebar';
+import { getHeaders } from '../utils/getHeaders';
 import ChatAppLogo from '../assets/chatapplogo.svg';
-import { ConversationPanel } from '../components/ConversationPanel';
+import { toast } from 'react-toastify';
 
 const customTheme = extendTheme({
   styles: {
@@ -17,25 +18,30 @@ const customTheme = extendTheme({
 
 const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedChannel, setSelectedChannel] = useState(null);
-  const [message, setMessage] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [conversation, setConversation] = useState([]);
+  // const [selectedChannel, setSelectedChannel] = useState(null);
+  const [conversations, setConversation] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
   const [channels, setChannels] = useState([]);
-  
-  const handleSelectUser = (user) => {
-    setSelectedUser(user);
-    // console.log("Selected user:" + user.email)
-  };
-
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     const emailFromLocalStorage = localStorage.getItem('uid');
     setUserEmail(emailFromLocalStorage);
     setCurrentUser(emailFromLocalStorage);
+
+    //checks if all headers exists
+    const { accessToken } = getHeaders();
+    
+    if(accessToken == null) {
+        console.log("Authorized")
+    } else {
+      if (!toast.isActive("loginError")) {
+        toast.error("Please login first.", { toastId: "loginError", position: toast.POSITION.TOP_CENTER});
+      }
+      navigate('/')
+    }
   }, []);
 
   const handleSignOut = () => {
@@ -50,10 +56,6 @@ const App = () => {
     setChannels([...channels, { name: channelName, members: [currentUser], messages: [] }]);
   };
 
-  const handleUserClick = (user) => {
-    setSelectedUser(user);
-  };
-
   const handleChannelClick = (channel) => {
     setSelectedChannel(channel);
   };
@@ -61,23 +63,27 @@ const App = () => {
   return (
     <ChakraProvider theme={customTheme}>
       <CSSReset />
-      <Box>
+      <Box w="100vw" maxHeight="100vh">
         {/* Header */}
         <Flex
           as="header"
           align="center"
           justify="space-between"
-          p={4}
+          padding={6}
           borderBottom="1px"
           borderColor="gray.200"
+          minW="100vw"
         >
+          <Link to='/app'>
           <img src={ChatAppLogo} alt="Logo" width={60} /> 
+          </Link>
+          
 
           {userEmail && (
-            <Flex align="center">
+            <Flex align="center" justify="space-between">
               <Text mr={2}>{userEmail}</Text>
               <Avatar size="sm"  />
-              <Button ml={4} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
+              <Button ml={6} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
                 Sign Out
               </Button>
             </Flex>
@@ -85,23 +91,14 @@ const App = () => {
         </Flex>
 
         {/* Main Content */}
-        <Flex height="100vh">
+        <Flex height="100vh" justify="space-between">
 
           {/* Sidebar */}
-          <Sidebar
-            handleUserClick={handleUserClick}
-            handleChannelClick = {handleChannelClick}
-            searchTerm={searchTerm}
-            createChannel={createChannel}
-            channels={channels}
-            onSelectUser={handleSelectUser}
-          />
+          <Sidebar conversations={conversations}
+           />
 
           {/* Conversation Panel */}
-          <Outlet 
-          selectedUser={selectedUser}
-          />
-
+          <Outlet selectedUser={selectedUser} />
         </Flex>
       </Box>
     </ChakraProvider>

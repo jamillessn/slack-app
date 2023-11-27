@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import Register from './pages/Register'
 import MainPage from './pages/MainPage'
-import './index.css'
+import './App.css'
 import { ChakraProvider } from "@chakra-ui/react"
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -29,7 +29,6 @@ const router = createBrowserRouter([
         path: "c/:receiver_id",
         element: <ConversationPanel />,
         loader: async ({params}) => {
-          //fetch get all messages using params.receiver_id
           const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
             method: 'GET',
             headers: {
@@ -41,7 +40,7 @@ const router = createBrowserRouter([
             }
           });
 
-          return { receiver_id: params.receiver_id}
+          return { receiver_id: params.receiver_id, data: data}
         }
       }
     ]
