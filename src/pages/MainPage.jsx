@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Outlet, useLoaderData } from 'react-router-dom';
-import { ChakraProvider, Box, Flex, Avatar, Input, Button, CSSReset, extendTheme, theme, Text } from '@chakra-ui/react';
+import { useNavigate, Outlet, Link, } from 'react-router-dom';
+import { ChakraProvider, Box, Flex, Avatar, Button, CSSReset, extendTheme, Text } from '@chakra-ui/react';
 import Sidebar from '../components/Sidebar';
+import { getHeaders } from '../utils/getHeaders';
 import ChatAppLogo from '../assets/chatapplogo.svg';
-import { ConversationPanel } from '../components/ConversationPanel';
+import { toast } from 'react-toastify';
 
 const customTheme = extendTheme({
   styles: {
@@ -17,72 +18,31 @@ const customTheme = extendTheme({
 
 const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedChannel, setSelectedChannel] = useState(null);
-  const [message, setMessage] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [conversation, setConversation] = useState([]);
+  // const [selectedChannel, setSelectedChannel] = useState(null);
+  const [conversations, setConversation] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
   const [channels, setChannels] = useState([]);
-  
-
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     const emailFromLocalStorage = localStorage.getItem('uid');
     setUserEmail(emailFromLocalStorage);
     setCurrentUser(emailFromLocalStorage);
+
+    //checks if all headers exists
+    const { accessToken } = getHeaders();
     
-  }, []);
-
-  
-
-  async function retrieveMessages() {
-
-    try {
-      const res = await fetch("http://206.189.91.54/api/v1/messages", {
-      method: 'POST',
-      headers: {
-          "access-token": localStorage.getItem("access-token") || "",
-          "uid": localStorage.getItem("uid") || "",
-          "client": localStorage.getItem("client") || "",
-          "expiry": localStorage.getItem("expiry") || "",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(message)
-      });
-
-      const newMessage = {
-        receiver_id: localStorage.getItem("uid")
-        // receiver_class: "User",
-        // body: messageBody,
-      };
-  
-      const data = await res.json();
-  
-      if (data.status === 401) {
-      localStorage.clear();
+    if(accessToken == null) {
+        console.log("Authorized")
+    } else {
+      if (!toast.isActive("loginError")) {
+        toast.error("Please login first.", { toastId: "loginError", position: toast.POSITION.TOP_CENTER});
       }
-  
-    } catch(error) {
-      console.log(error);
+      navigate('/')
     }
-  }
-
-  const handleUserClick = (user) => {
-    setSelectedUser(user);
-  };
-
-  const handleChannelClick = (channel) => {
-    setSelectedChannel(channel);
-  };
-
-  const handleSendClick = () => {
-    if (message.trim() !== '') {
-      setConversation([...conversation, { user: currentUser, message }]);
-      setMessage('');
-    }
-  };
+  }, []);
 
   const handleSignOut = () => {
     setCurrentUser(null);
@@ -96,31 +56,34 @@ const App = () => {
     setChannels([...channels, { name: channelName, members: [currentUser], messages: [] }]);
   };
 
-  const joinChannel = (channel) => {
-    setSelectedUser(channel);
+  const handleChannelClick = (channel) => {
+    setSelectedChannel(channel);
   };
-
 
   return (
     <ChakraProvider theme={customTheme}>
       <CSSReset />
-      <Box>
+      <Box w="100vw" maxHeight="100vh">
         {/* Header */}
         <Flex
           as="header"
           align="center"
           justify="space-between"
-          p={4}
+          padding={6}
           borderBottom="1px"
           borderColor="gray.200"
+          minW="100vw"
         >
+          <Link to='/app'>
           <img src={ChatAppLogo} alt="Logo" width={60} /> 
+          </Link>
+          
 
           {userEmail && (
-            <Flex align="center">
+            <Flex align="center" justify="space-between">
               <Text mr={2}>{userEmail}</Text>
               <Avatar size="sm"  />
-              <Button ml={4} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
+              <Button ml={6} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
                 Sign Out
               </Button>
             </Flex>
@@ -128,55 +91,14 @@ const App = () => {
         </Flex>
 
         {/* Main Content */}
-        <Flex height="100vh">
-          {/* Sidebar */}
-          <Sidebar
-            handleUserClick={handleUserClick}
-            handleChannelClick = {handleChannelClick}
-            searchTerm={searchTerm}
-            createChannel={createChannel}
-            channels={channels}
-          />
+        <Flex height="100vh" justify="space-between">
 
-          <Outlet />
+          {/* Sidebar */}
+          <Sidebar conversations={conversations}
+           />
 
           {/* Conversation Panel */}
-          <Box w="70vw" p={4} overflowY="auto">
-            {selectedUser ? (
-              <Flex direction="column" align="center">
-                <Avatar size="lg" src={selectedUser.avatar} />
-                <Text mt={4} fontSize="xl">
-                  {selectedUser.name}
-                </Text>
-                <Box mt={4} mb={4} w="100%" flex="1" display="flex" flexDirection="column">
-                  {selectedUser.messages &&
-                    selectedUser.messages.map((item, index) => (
-                      <Box key={index} mb={2}>
-                        <Text fontWeight="bold">{item.user.name}:</Text>
-                        <Text>{item.message}</Text>
-                      </Box>
-                    ))}
-                </Box>
-                <ConversationPanel />
-
-             
-                {/* Message Box and Send Button */}
-                <Flex w="100%">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    mr={2}
-                  />
-                  <Button onClick={handleSendClick} colorScheme="teal">
-                    Send
-                  </Button>
-                </Flex>
-              </Flex>
-            ) : (
-              <Text>Please select a user or channel to start a conversation.</Text>
-            )}
-          </Box>
+          <Outlet selectedUser={selectedUser} />
         </Flex>
       </Box>
     </ChakraProvider>

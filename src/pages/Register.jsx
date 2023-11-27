@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import  ChatAppLogo  from '../assets/chatapplogo.svg';
 import {
   Flex,
   Box,
+  Heading,
   FormControl,
   FormLabel,
   Input,
@@ -27,9 +29,8 @@ function Register() {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    handleSubmit(email, password);
-    navigate("/")
-  };
+      handleSubmit(email, password);
+  }
 
   const handleSubmit = async (email, password) => {
 
@@ -48,13 +49,7 @@ function Register() {
   
      localStorage.setItem("access-token", res.headers.get("access-token"))
   
-      console.log(res.headers.get("uid"));
-      console.log(res.headers.get("access-token"));
-      console.log(res.headers.get("expiry"));
-      console.log(res.headers.get("client"));
-  
       const responseData = await res.json();
-      console.log(responseData)
   
       if(responseData.status === "success"){
         toast.success('Registration successful.', {
@@ -62,14 +57,11 @@ function Register() {
         });
         navigate("/")
       }
-  
-      if(responseData.status === "error"){
+      else if(responseData.status === "error"){
         throw responseData
       }
-      
   
     } catch (error) {
-        console.log(error)
         toast.error(error.errors.full_messages[0], {
           position: toast.POSITION.TOP_CENTER,
         });
@@ -79,7 +71,8 @@ function Register() {
 
   return (
     <>
-     <Flex
+    <Stack spacing={6} w={'full'} maxW={'md'}>
+    <Flex
       align="center"
       justify="center"
       height="100vh"
@@ -96,6 +89,11 @@ function Register() {
         borderRadius="md"
       >
       <FormControl isRequired>
+        <Flex justifyContent="center" alignItems="center">
+          <img src={ChatAppLogo} alt="Logo" width={100} align="center" id="logo"/>
+          <Heading fontSize={'2xl'}>Create an account</Heading>
+        </Flex>
+      
         <FormLabel>Name</FormLabel>
         <Input 
         type='text' 
@@ -154,6 +152,7 @@ function Register() {
       </FormControl>
       </Box>
       </Flex>
+    </Stack>
     </>
   );
 }

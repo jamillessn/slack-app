@@ -59,12 +59,6 @@ export default function Login() {
     email: '',
     password: '',
   });
-  
-//   setUserInfo((curState)=> {
-// console.log(curState)
-//     return {...curState, email: "new email"}
-//   })
-
 
   return (
     <Stack minH={'100vh'} minW={'100vw'} direction={{ base: 'column', md: 'row' }}>

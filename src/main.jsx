@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import Register from './pages/Register'
 import MainPage from './pages/MainPage'
-import './index.css'
+import './App.css'
 import { ChakraProvider } from "@chakra-ui/react"
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -24,18 +24,23 @@ const router = createBrowserRouter([
   {
     path: '/app',
     element: <MainPage />,
-    loader: async ({params}) => {
-    return fetch(params.conversationId)
-    },
     children: [
       {
-        path: "c/:user_id",
+        path: "c/:receiver_id",
         element: <ConversationPanel />,
         loader: async ({params}) => {
-          //fetch get all messages using params.user_id
-          // return await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
-          const data = await fetch(`/api/v1/messages?receiver_id=${params.user_id}&receiver_class=User`)
-          return { user_id: params.user_id, data}
+          const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
+            method: 'GET',
+            headers: {
+              "access-token": localStorage.getItem("access-token") || "",
+              "uid": localStorage.getItem("uid") || "",
+              "client": localStorage.getItem("client") || "",
+              "expiry": localStorage.getItem("expiry") || "",
+              "Content-Type": "application/json"
+            }
+          });
+
+          return { receiver_id: params.receiver_id, data: data}
         }
       }
     ]
