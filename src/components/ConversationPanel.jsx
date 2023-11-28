@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Box, Flex, Avatar, Input, Button, Text } from '@chakra-ui/react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { Box, Flex, Input, Button, Text } from '@chakra-ui/react';
 import { useLoaderData } from 'react-router-dom'
-import { toast } from 'react-toastify';
 import { getAllUsers } from '../utils/api';
 import { getHeaders } from '../utils/getHeaders';
+import { None } from './None';
 
 export const ConversationPanel = () => {
   const [selectedUser, setSelectedUser] = useState(null);
-  // const [conversationsList, setList] = useState([])
   const headers = getHeaders();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]); // Maintain a list of messages
   const { receiver_id } = useLoaderData();
   const scrollRef = useRef(null);
 
+  
  const getMessages = (receiver_id, headers) => {
     const options = {
       method: 'GET',
@@ -49,27 +49,24 @@ export const ConversationPanel = () => {
 
 }
 
-const clearMessages = () => {
-  setMessages([]);
-  setSelectedUser(null);
-}
-
 useEffect(() => {
   clearMessages();
   getMessages(receiver_id, headers);
   setSelectedUser(localStorage.getItem("selectedUser"))
   getAllUsers();
   scrollToBottom();
-},[]);
+},[receiver_id]);
+
+
 
 const chatMessages = Object.keys(messages).map(msgId => {
   const msg = messages[msgId];
   const isCurrentUser = msg.sender === headers.uid;
 
   return (
-    <div key={msgId} style={{ textAlign: isCurrentUser ? 'left' : 'right' }}>
+    <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left' }}>
       <Text color='black' fontWeight='700'> {msg.sender} </Text>
-      <Text> {msg.created_at} </Text>
+      {/* <Text> {msg.created_at} </Text> */}
       <Text 
         p={2} 
         borderRadius="md" 
@@ -84,11 +81,23 @@ const chatMessages = Object.keys(messages).map(msgId => {
   );
 });
 
+//scrolls to bottom of the messages 
+useLayoutEffect(() => {
+  scrollToBottom();
+}, [chatMessages]);
+
+
   const scrollToBottom = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  
+const clearMessages = () => {
+  setMessages([]);
+  setSelectedUser(null);
+}
 
   const handleSendClick = () => {
     sendMessage({message, receiver_id, headers});
@@ -152,9 +161,10 @@ const chatMessages = Object.keys(messages).map(msgId => {
 }
   
   return (
-    <div> 
-      {/* Header */}
-      <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
+    <>
+    <Flex flexDirection="column">
+         {/* Header */}
+       <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
         <Text fontWeight="bold" fontSize="lg">
           Chatting with: {selectedUser}
         </Text>
@@ -162,11 +172,12 @@ const chatMessages = Object.keys(messages).map(msgId => {
 
       {/* Chat Messages */}
       <Box minWidth="80vw" p={7} maxHeight="100vh" overflowY="auto">
-        <Flex direction ="column">
-          {chatMessages}
-          
-          <div ref={scrollRef} /> 
-        </Flex>
+      
+          <Flex direction="column">
+            {chatMessages}
+            <div ref={scrollRef} />
+          </Flex>
+        
 
       {/* Message Box and Send Button */}
       <Flex p={5} paddingTop={8}>
@@ -186,7 +197,10 @@ const chatMessages = Object.keys(messages).map(msgId => {
         </Flex>
           
       </Box>
-    </div>
+    </Flex>
+      
+    </>
+     
   )
   
 }

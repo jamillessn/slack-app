@@ -21,7 +21,6 @@ export async function getAllUsers() {
       }));
   
     } catch (error) {
-      console.log(error);
       return [];
     }
   }

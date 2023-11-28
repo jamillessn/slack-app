@@ -18,7 +18,6 @@ const customTheme = extendTheme({
 
 const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
-  // const [selectedChannel, setSelectedChannel] = useState(null);
   const [conversations, setConversation] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
@@ -31,11 +30,10 @@ const App = () => {
     setUserEmail(emailFromLocalStorage);
     setCurrentUser(emailFromLocalStorage);
 
-    //checks if all headers exists
     const { accessToken } = getHeaders();
     
-    if(accessToken == null) {
-        console.log("Authorized")
+    if(accessToken != null) {
+        // console.log("Authorized")
     } else {
       if (!toast.isActive("loginError")) {
         toast.error("Please login first.", { toastId: "loginError", position: toast.POSITION.TOP_CENTER});
@@ -82,7 +80,7 @@ const App = () => {
           {userEmail && (
             <Flex align="center" justify="space-between">
               <Text mr={2}>{userEmail}</Text>
-              <Avatar size="sm"  />
+              <Avatar size="sm"/>
               <Button ml={6} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
                 Sign Out
               </Button>
@@ -91,7 +89,7 @@ const App = () => {
         </Flex>
 
         {/* Main Content */}
-        <Flex height="100vh" justify="space-between">
+        <Flex height="100vh">
 
           {/* Sidebar */}
           <Sidebar conversations={conversations}
@@ -99,6 +97,7 @@ const App = () => {
 
           {/* Conversation Panel */}
           <Outlet selectedUser={selectedUser} />
+          
         </Flex>
       </Box>
     </ChakraProvider>

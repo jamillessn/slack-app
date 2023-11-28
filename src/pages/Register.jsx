@@ -28,8 +28,16 @@ function Register() {
   const handleConfPasswordChange = (e) => setConfPassword(e.target.value);
 
   const handleFormSubmit = (e) => {
-    e.preventDefault();
+    if(password != conf_password)
+    {
+      toast.error("Passwords do not match.", {
+        position: toast.POSITION.TOP_CENTER,
+      })
+    } else {
+      e.preventDefault();
       handleSubmit(email, password);
+    }
+    
   }
 
   const handleSubmit = async (email, password) => {
@@ -83,7 +91,7 @@ function Register() {
     >
       <Box
         p={8}
-        width={{ base: '90%', sm: '80%', md: '50%' }}
+        width={{ base: '90%', sm: '80%', md: '35%' }}
         bg="white"
         boxShadow="lg"
         borderRadius="md"

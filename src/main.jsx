@@ -4,6 +4,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import Register from './pages/Register'
 import MainPage from './pages/MainPage'
+import { None } from './components/None'
+// import createChannel from './components/CreateChannel'
 import './App.css'
 import { ChakraProvider } from "@chakra-ui/react"
 import { ToastContainer } from 'react-toastify';
@@ -20,6 +22,7 @@ const router = createBrowserRouter([
   {
     path: '/sign_up',
     element: <Register />,
+    // error: <ErrorPage />
   },
   {
     path: '/app',
@@ -38,10 +41,15 @@ const router = createBrowserRouter([
               "expiry": localStorage.getItem("expiry") || "",
               "Content-Type": "application/json"
             }
-          });
-
+      })
+      
           return { receiver_id: params.receiver_id, data: data}
         }
+      },
+      {
+        path: "",
+        element: <None />,
+        index: true
       }
     ]
   }
