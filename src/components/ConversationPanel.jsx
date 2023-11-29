@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { Box, Flex, Input, Button, Text } from '@chakra-ui/react';
 import { useLoaderData } from 'react-router-dom'
-import { getAllUsers } from '../utils/api';
+import { getAllUsers } from '../utils/getAllUsers';
 import { getHeaders } from '../utils/getHeaders';
-import { None } from './None';
+import { format } from 'date-fns';
 
 export const ConversationPanel = () => {
   const [selectedUser, setSelectedUser] = useState(null);
@@ -12,7 +12,6 @@ export const ConversationPanel = () => {
   const [messages, setMessages] = useState([]); // Maintain a list of messages
   const { receiver_id } = useLoaderData();
   const scrollRef = useRef(null);
-
   
  const getMessages = (receiver_id, headers) => {
     const options = {
@@ -54,19 +53,19 @@ useEffect(() => {
   getMessages(receiver_id, headers);
   setSelectedUser(localStorage.getItem("selectedUser"))
   getAllUsers();
-  scrollToBottom();
 },[receiver_id]);
-
-
 
 const chatMessages = Object.keys(messages).map(msgId => {
   const msg = messages[msgId];
   const isCurrentUser = msg.sender === headers.uid;
 
+  const senderName = isCurrentUser ? 'You' : msg.sender.split('@')[0];
+  const formattedDate = format(new Date(msg.created_at), 'M/dd/yyyy h:mm a');
+
   return (
-    <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left' }}>
-      <Text color='black' fontWeight='700'> {msg.sender} </Text>
-      {/* <Text> {msg.created_at} </Text> */}
+    <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+      <Text color='black' fontWeight='700'> {senderName} </Text>
+      <Text color='gray' fontSize={11}> {formattedDate} </Text>
       <Text 
         p={2} 
         borderRadius="md" 
@@ -81,7 +80,6 @@ const chatMessages = Object.keys(messages).map(msgId => {
   );
 });
 
-//scrolls to bottom of the messages 
 useLayoutEffect(() => {
   scrollToBottom();
 }, [chatMessages]);
@@ -148,21 +146,21 @@ const clearMessages = () => {
 
                 filteredMessage[dm.id] = {
                     sender: headers.uid,
-                    receiver: '', 
+                    receiver: receiver_id, 
                     body: dm.body, 
                     created_at: dm.created_at
                 }
 
                 setMessages({...messages, ...filteredMessage});
             } else {
-                console.log("There is an error sending message.");
+                toast.error("There is an error sending message.");
             }
         })
 }
   
   return (
     <>
-    <Flex flexDirection="column">
+    <Flex flexDirection="column" minHeight="100vh">
          {/* Header */}
        <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
         <Text fontWeight="bold" fontSize="lg">
@@ -171,7 +169,7 @@ const clearMessages = () => {
       </Box>
 
       {/* Chat Messages */}
-      <Box minWidth="80vw" p={7} maxHeight="100vh" overflowY="auto">
+      <Box minWidth="80vw" p={7} minHeight="100vh" overflowY="auto" >
       
           <Flex direction="column">
             {chatMessages}
@@ -180,7 +178,7 @@ const clearMessages = () => {
         
 
       {/* Message Box and Send Button */}
-      <Flex p={5} paddingTop={8}>
+      <Flex p={5} paddingTop={8} position="sticky" bottom="0">
           <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

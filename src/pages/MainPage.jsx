@@ -6,6 +6,7 @@ import { getHeaders } from '../utils/getHeaders';
 import ChatAppLogo from '../assets/chatapplogo.svg';
 import { toast } from 'react-toastify';
 
+
 const customTheme = extendTheme({
   styles: {
     global: {
@@ -19,11 +20,9 @@ const customTheme = extendTheme({
 const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [conversations, setConversation] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
-  const [channels, setChannels] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
-  
 
   useEffect(() => {
     const emailFromLocalStorage = localStorage.getItem('uid');
@@ -50,53 +49,48 @@ const App = () => {
     navigate('/');
   };
 
-  const createChannel = (channelName) => {
-    setChannels([...channels, { name: channelName, members: [currentUser], messages: [] }]);
-  };
-
-  const handleChannelClick = (channel) => {
-    setSelectedChannel(channel);
-  };
-
   return (
     <ChakraProvider theme={customTheme}>
       <CSSReset />
-      <Box w="100vw" maxHeight="100vh">
-        {/* Header */}
-        <Flex
-          as="header"
-          align="center"
-          justify="space-between"
-          padding={6}
-          borderBottom="1px"
-          borderColor="gray.200"
-          minW="100vw"
-        >
-          <Link to='/app'>
-          <img src={ChatAppLogo} alt="Logo" width={60} /> 
-          </Link>
-          
-
-          {userEmail && (
-            <Flex align="center" justify="space-between">
-              <Text mr={2}>{userEmail}</Text>
-              <Avatar size="sm"/>
-              <Button ml={6} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
-                Sign Out
-              </Button>
-            </Flex>
-          )}
-        </Flex>
-
+      <Box w="100vw" minHeight="100vh">
         {/* Main Content */}
-        <Flex height="100vh">
+        <Flex flexDirection="column">
+          {/* Header */}
+          <Flex
+            as="header"
+            align="center"
+            justify="space-between"
+            maxHeight= "20%"
+            padding={2}
+            paddingRight={7}
+            paddingLeft={7}
+            borderBottom="1px"
+            borderColor="gray.200"
+            minW="100vw"
+          >
+            <Link to='/app'>
+            <img src={ChatAppLogo} alt="Logo" width={60} /> 
+            </Link>
+            
 
+            {userEmail && (
+              <Flex align="center" justify="space-between">
+                <Text mr={2}>{userEmail}</Text>
+                <Avatar size="sm"/>
+                <Button ml={6} onClick={handleSignOut} backgroundColor="#0101FE" colorScheme='blue'>
+                  Sign Out
+                </Button>
+              </Flex>
+            )}
+          </Flex>
+            <Flex flexDirection="row" height="90vh">
+               <Sidebar/>
+
+              {/* Conversation Panel */}
+              <Outlet selectedUser={selectedUser} />
+            </Flex>
           {/* Sidebar */}
-          <Sidebar conversations={conversations}
-           />
-
-          {/* Conversation Panel */}
-          <Outlet selectedUser={selectedUser} />
+          
           
         </Flex>
       </Box>

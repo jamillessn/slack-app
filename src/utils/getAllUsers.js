@@ -15,7 +15,12 @@ export async function getAllUsers() {
       const dataLength = data.data.length;
       let dataLengthless = dataLength - 400;
   
-      return data.data.slice(dataLengthless, dataLength).map(user => ({
+      // return data.data.slice(dataLengthless, dataLength).map(user => ({
+      //   user_id: user.id,
+      //   email: user.email
+      // }));
+
+      return data.data.map(user => ({
         user_id: user.id,
         email: user.email
       }));

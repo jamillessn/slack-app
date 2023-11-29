@@ -1,10 +1,12 @@
 import React, { useState, useEffect} from "react";
+import { getHeaders } from "../utils/getHeaders";
+import { toast } from "react-toastify";
  
  function CreateChannel() {
     const [userId , setUserId ] = useState(null);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [channelName, setChannelName] = useState('');
-
+    const headers = getHeaders();
     
     const handleCreateChannel = () => {
         onOpen();
@@ -13,19 +15,17 @@ import React, { useState, useEffect} from "react";
       const handleSubmit = async (channelName, userId) => {
 
         try {
-          const res = await fetch("http://206.189.91.54/api/v1/auth/", {
+          const res = await fetch("http://206.189.91.54/api/v1/channels", {
             method: "POST",
             headers: {
-              "access-token": localStorage.getItem("access-token") || "",
-              "uid": localStorage.getItem("uid") || "",
-              "client": localStorage.getItem("client") || "",
-              "expiry": localStorage.getItem("expiry") || "",
+              "access-token": headers.accessToken || "",
+              "uid": headers.uid || "",
+              "client": headers.client || "",
+              "expiry": headers.expiry || "",
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ channelName: channelName, userId: userId })
           });
-      
-        //  localStorage.setItem("access-token", res.headers.get("access-token"))
       
           const responseData = await res.json();
       
@@ -90,30 +90,10 @@ import React, { useState, useEffect} from "react";
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
         setUserId(user.id);
-    
-        setHeaders({
-            'Content-Type' : 'application/json', 
-            'access-token' : localStorage.getItem('access-token'),
-            'client' : localStorage.getItem('client'),
-            'expiry' : localStorage.getItem('expiry'), 
-            'uid' : localStorage.getItem('uid')
-        })
+
     }, [userId]);
 
-   
-
-   return(
-     {/* "Create Channel" button */}
-     <Button
-     colorScheme="teal"
-     mb={4}
-     onClick={handleCreateChannel}
-   >
-     Create Channel
-   </Button>
-   
-   )
 }
 
-export default createChannel;
+export default CreateChannel;
 
