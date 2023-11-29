@@ -5,7 +5,6 @@ import LandingPage from './pages/LandingPage'
 import Register from './pages/Register'
 import MainPage from './pages/MainPage'
 import { None } from './components/None'
-// import createChannel from './components/CreateChannel'
 import './App.css'
 import { ChakraProvider } from "@chakra-ui/react"
 import { ToastContainer } from 'react-toastify';
@@ -22,14 +21,18 @@ const router = createBrowserRouter([
   {
     path: '/sign_up',
     element: <Register />,
-    // error: <ErrorPage />
   },
   {
     path: '/app',
     element: <MainPage />,
     children: [
       {
-        path: "c/:receiver_id",
+        path: "",
+        element: <None />,
+        index: true
+      },
+      {
+        path: "m/:receiver_id",
         element: <ConversationPanel />,
         loader: async ({params}) => {
           const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
@@ -47,10 +50,23 @@ const router = createBrowserRouter([
         }
       },
       {
-        path: "",
-        element: <None />,
-        index: true
+        path: "channels/:chan_id",
+        element: <ConversationPanel />,
+        loader: async ({params}) => {
+          const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
+            method: 'GET',
+            headers: {
+              "access-token": localStorage.getItem("access-token") || "",
+              "uid": localStorage.getItem("uid") || "",
+              "client": localStorage.getItem("client") || "",
+              "expiry": localStorage.getItem("expiry") || "",
+              "Content-Type": "application/json"
+            }
+      })
+          return { chan_id: params.chan_id, data: data}
+        }
       }
+      
     ]
   }
 ]);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Flex,
@@ -14,26 +14,31 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
+  Avatar
 } from '@chakra-ui/react';
-// import { getHeaders } from '../utils/getHeaders';
+
+import Select from 'react-select';
+import { X } from 'react-feather';
+
+import { AiOutlineUser } from 'react-icons/ai';
+import { getHeaders } from '../utils/getHeaders';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
-import { getAllUsers } from '../utils/api';
-
+import { getAllUsers } from '../utils/getAllUsers';
 
 const Sidebar = () => {
-  const [user_id, setUserId] = useState([]);
+  const [userId, setUserId] = useState([]);
   const [searchedUser, setSearchedUser] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [channelList, setChannelList] = useState([]);
   const [selectedUser, setSelectedUser] = useState([]);
+  const [addedMember, setAddedMembers] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [channelName, setChannelName] = useState('');
-  // const [ headers, setHeaders ] = useState({});
-  
-  localStorage.setItem("selectedUser", selectedUser)
+  const [channelMembers, setChannelMembers] = useState([]);
+  const headers = getHeaders();
   
   const handleSelectUser = (user) => {
     setSelectedUser(user.email);
@@ -43,113 +48,107 @@ const Sidebar = () => {
     onOpen();
   };
 
-  // const handleCreateChannel = () => {
-  //   console.log('Channel created:', channelName);
-  //   onClose();
 
-  //   const channelBody = {
-  //     name: channelName,
-  //     user_id: [data.owner.id]
-  //   }
-
-  //   console.log(channelBody.name, channelBody.user_id)
-
-  //   const options = {
-  //     method: 'POST',
-  //     headers: {
-  //       'access-token': headers.accessToken,
-  //       'client' : headers.client,
-  //       'expiry' : headers.expiry,
-  //       'uid' : headers.uid
-  //     }
-  //   }
-
-  //   const url = 'http://206.189.91.54/api/v1/channels'
-
-  //   fetch(url, options)
-  //     .then(response => {
-  //       return response.json()
-  //     })
-  //     .then(data => {
-  //       console.log(data)
-  //       if(data.errors){
-  //         console.log(data)
-  //       } else {
-  //         setChannelList([...channelList, data.data])
-  //       }
-
-  //     })
-  // };
-
-  // const handleCreateChannel = () => {
-  //   onOpen();
-  // };
-
-  const handleSubmit = async (channelName, userId) => {
+  //Retrieve channels
+  async function getChannelsList() {
 
     try {
-      const res = await fetch("http://206.189.91.54/api/v1/auth/", {
-        method: "POST",
+      const res = await fetch("http://206.189.91.54/api/v1/channels/", {
+        method: "GET",
         headers: {
-          "access-token": localStorage.getItem("access-token") || "",
-          "uid": localStorage.getItem("uid") || "",
-          "client": localStorage.getItem("client") || "",
-          "expiry": localStorage.getItem("expiry") || "",
+          'access-token': headers.accessToken || "",
+          'client' : headers.client || "",
+          'expiry' : headers.expiry || "",
+          'uid' : headers.uid || "",
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ channelName: channelName, userId: userId })
+        
       });
-  
-    //  localStorage.setItem("access-token", res.headers.get("access-token"))
-  
+      
       const responseData = await res.json();
-  
-      if(responseData.status === "success"){
-        toast.success('Channel created!', {
-          position: toast.POSITION.TOP_CENTER,
-        });
+     
+      if(Array.isArray(responseData.data)) {
+        setChannelList(responseData.data.map(chan => chan.name));
       }
-      else if(responseData.status === "error"){
-        throw responseData
-      }
-  
+      // else {
+      //   toast.error("Invalid structure API response",{position: toast.POSITION.TOP_CENTER})
+      // }
     } catch (error) {
-        toast.error(error.error[0], {
+        toast.error(error.error, {
           position: toast.POSITION.TOP_CENTER,
         });
     }
   };
 
-  const channelListDisplay = () => {
-    channelList.map( chan => {
-      return <Link 
-            // to={`/app/c/${user.user_id}`} 
-            key={chan.id}
-            // onClick={() => handleSelectUser(user)}
-            >
-            <Flex align="center" mb={2}>
+  //Create channel
+  const handleSubmit = async (channelName, channelMembers) => {
 
-              <Box
-                w={8}
-                h={8}
-                rounded="full"
-                bg="black"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                color="white"
-                marginRight={2}
-              >
-                <Text fontSize="sm" fontWeight="bold">
-                  C
-                </Text>
-              </Box>
-              <Text>{chan.name}</Text>
-            </Flex>
-          </Link>
-    });
-  }
+    try {
+      const res = await fetch("http://206.189.91.54/api/v1/channels/", {
+        method: "POST",
+        mode: 'cors',
+        headers: {
+          'access-token': headers.accessToken || "",
+          'client' : headers.client || "",
+          'expiry' : headers.expiry || "",
+          'uid' : headers.uid || "",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name: channelName, user_ids: channelMembers })
+        
+      });
+      
+      console.log(channelName, channelMembers)
 
+      toast.success('Channel created!', {
+        position: toast.POSITION.TOP_CENTER,
+        autoClose: 2000,
+      });
+  
+      const responseData = await res.json();
+      console.log(responseData)
+    
+      if(responseData.errors[0]){
+        toast.error(responseData.errors[0], {
+          position: toast.POSITION.TOP_CENTER,
+          autoClose: 2000,
+        });
+      }
+  
+    } catch (error) {
+        toast.error(error.error, {
+          position: toast.POSITION.TOP_CENTER,
+        });
+    }
+  };
+
+  const handleCreateChannel = () => {
+    const userIDs = [selectedUser];
+    handleSubmit(channelName, userIDs);
+    onClose();
+  };
+
+  const CustomOption = ({ innerProps, label }) => (
+    <div {...innerProps}>
+      <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+      {label}
+    </div>
+  );
+  
+  const CustomMultiValue = ({ data, innerProps, removeProps }) => (
+    <Flex align="center" {...innerProps}>
+      <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+      {data.label}
+      <X
+        size={16}
+        style={{ cursor: 'pointer' }}
+        onClick={(e) => {
+          removeProps.onClick(e);
+          setChannelMembers(channelMembers.filter((member) => member !== data.value));
+        }}
+      />
+    </Flex>
+  );
     
   //Populate the sidebar with users
   useEffect(() => {
@@ -157,8 +156,9 @@ const Sidebar = () => {
       const users = await getAllUsers();
       setUsersList(users);
     }
-    channelListDisplay();
+    getChannelsList();
     fetchData();
+    setUserId(headers.uid)
   }, []);
 
   useEffect(() => {
@@ -171,7 +171,7 @@ const Sidebar = () => {
   }, [searchedUser, usersList]);
   
   return (
-    <Box w="30vw" bg="gray.200" p={4} overflowY="scroll">
+    <Box w="30vw" bg="gray.200" p={4} overflowY="scroll" maxHeight="100%">
       {/* Search Bar */}
       <Input
         mb={4}
@@ -189,51 +189,62 @@ const Sidebar = () => {
 
       <Divider my={2} borderColor="gray.400" />
 
-      {/* Display channel and filtered users */}
+      
       <Flex direction="column" style={{overflow: "hidden"}}>
       <Heading fontSize={'2xl'}>Channels:</Heading>
         <Box style={{overflow:"hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-        {channelListDisplay()}
+
+    {/* Display channel */}
+      {channelList.map((chan) => (
+            <Link 
+              // to={`/app/channels/${chan.id}`} 
+              key={chan.id}
+              // onClick={() => handleSelectUser(user)}
+              >
+                <Box
+                _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
+                mb={2}
+                p={2}
+                borderRadius="md"
+                  > 
+              <Flex align="center" mb={2}>
+                <Text
+                  style={{overflow:"hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
+                      {chan}
+                </Text>
+              </Flex>
+              </Box>
+              
+            </Link>
+          ))}
+     
 
       <Divider my={2} borderColor="gray.400" />
 
-        {filteredUsers.map((user) => (
-          <Link 
-            to={`/app/c/${user.user_id}`} 
-            key={user.user_id}
-            onClick={() => handleSelectUser(user)}
-            >
-              <Box
-              _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
-              mb={2}
-              p={2}
-              borderRadius="md"
-                > 
-            <Flex align="center" mb={2}>
-
-              <Box
-                w={8}
-                h={8}
-                rounded="full"
-                bg="black"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                color="white"
-                marginRight={2}
-                style={{overflow:"hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}
-              >
-                <Text fontSize="sm" fontWeight="bold">
-                  {user.email.charAt(0).toUpperCase()}
-                </Text>
-              </Box>
-              <Text>{user.email}</Text>
-            </Flex>
-
-            </Box>
-            
-          </Link>
-        ))}
+    {/* Display users */}
+{searchedUser.trim() !== '' && filteredUsers.map((user) => (
+  <Link 
+    to={`/app/m/${user.user_id}`} 
+    key={user.user_id}
+    onClick={() => handleSelectUser(user)}
+  >
+    <Box
+      _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
+      mb={2}
+      p={2}
+      borderRadius="md"
+    > 
+      <Flex align="center" mb={2}>
+        <Avatar bg='black' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
+        <Text
+          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
+          {user.email.split('@')[0]}
+        </Text>
+      </Flex>
+    </Box>
+  </Link>
+))}
        
         </Box>
       </Flex>
@@ -250,10 +261,30 @@ const Sidebar = () => {
               value={channelName}
               onChange={(e) => setChannelName(e.target.value)}
             />
+
+            <Select
+              placeholder="Add members"
+              mt={4}
+              isMulti
+              options={usersList.map((user) => ({
+                value: user.user_id,
+                label: user.email,
+              }))}
+              value={channelMembers.map((memberId) => ({
+                value: memberId,
+                label: usersList.find((user) => user.user_id === memberId)?.email || '',
+              }))}
+              onChange={(selectedMembers) => setChannelMembers(selectedMembers.map((member) => member.value))}
+              components={{
+                Option: CustomOption,
+                MultiValue: CustomMultiValue,
+              }}
+            />
+
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" bgColor="black" mr={3} onClick={handleSubmit}>
+            <Button colorScheme="blue" bgColor="black" mr={3} onClick={handleCreateChannel}>
               Create
             </Button>
             <Button onClick={onClose}>Cancel</Button>

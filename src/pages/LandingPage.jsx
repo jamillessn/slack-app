@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import LandingGif from '../assets/landing-gif.gif'
 import  ChatAppLogo  from '../assets/chatapplogo.svg';
 import {
   Button,
@@ -87,7 +86,6 @@ export default function Login() {
               direction={{ base: 'column', sm: 'row' }}
               align={'start'}
               justify={'space-between'}>
-              <Checkbox>Remember me</Checkbox>
               <Link to='/sign_up'>
               <Text color={'blue.500'}>Not yet a user? Register Now.</Text>
               </Link>
