@@ -10,7 +10,7 @@ import { ChakraProvider } from "@chakra-ui/react"
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ConversationPanel } from './components/ConversationPanel'
-
+import { ChannelChatBox } from './components/ChannelChatBox'
 
 const router = createBrowserRouter([
   {
@@ -51,25 +51,23 @@ const router = createBrowserRouter([
       },
       {
         path: "channels/:chan_id",
-        element: <ConversationPanel />,
-        loader: async ({params}) => {
-          const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
-            method: 'GET',
-            headers: {
-              "access-token": localStorage.getItem("access-token") || "",
-              "uid": localStorage.getItem("uid") || "",
-              "client": localStorage.getItem("client") || "",
-              "expiry": localStorage.getItem("expiry") || "",
-              "Content-Type": "application/json"
-            }
-      })
-          return { chan_id: params.chan_id, data: data}
-        }
+        element: <ChannelChatBox />
+      //   loader: async ({params}) => {
+      //     const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
+      //       method: 'GET',
+      //       headers: {
+      //         "access-token": localStorage.getItem("access-token") || "",
+      //         "uid": localStorage.getItem("uid") || "",
+      //         "client": localStorage.getItem("client") || "",
+      //         "expiry": localStorage.getItem("expiry") || "",
+      //         "Content-Type": "application/json"
+      //       }
+      // })
+          // return { chan_id: params.chan_id, data: data}
       }
+]}
       
-    ]
-  }
-]);
+    ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

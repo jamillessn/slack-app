@@ -15,6 +15,9 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Collapse,
+  Tabs, TabList, TabPanels, Tab, TabPanel,
+  Link as ChakraLink,
   Avatar
 } from '@chakra-ui/react';
 
@@ -38,6 +41,7 @@ const Sidebar = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [channelName, setChannelName] = useState('');
   const [channelMembers, setChannelMembers] = useState([]);
+  const [isChannelsOpen, setChannelsOpen] = useState(true); // State for channels visibility
   const headers = getHeaders();
   
   const handleSelectUser = (user) => {
@@ -49,7 +53,6 @@ const Sidebar = () => {
   };
 
 
-  //Retrieve channels
   async function getChannelsList() {
 
     try {
@@ -70,9 +73,6 @@ const Sidebar = () => {
       if(Array.isArray(responseData.data)) {
         setChannelList(responseData.data.map(chan => chan.name));
       }
-      // else {
-      //   toast.error("Invalid structure API response",{position: toast.POSITION.TOP_CENTER})
-      // }
     } catch (error) {
         toast.error(error.error, {
           position: toast.POSITION.TOP_CENTER,
@@ -80,7 +80,7 @@ const Sidebar = () => {
     }
   };
 
-  //Create channel
+  //Create Channel button "Create"
   const handleSubmit = async (channelName, channelMembers) => {
 
     try {
@@ -134,7 +134,28 @@ const Sidebar = () => {
       {label}
     </div>
   );
+
+  const displayChannels = channelList.map((chanName) => (
+    <ChakraLink key={chanName} to={`/app/channels/${chanName}`}>
+      <Box
+        _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
+        mb={2}
+        p={2}
+        borderRadius="md"
+      >
+        <Flex align="center" mb={2}>
+          <Text
+            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          >
+            {chanName}
+          </Text>
+        </Flex>
+      </Box>
+    </ChakraLink>
+  ));
   
+  
+    
   const CustomMultiValue = ({ data, innerProps, removeProps }) => (
     <Flex align="center" {...innerProps}>
       <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
@@ -172,83 +193,63 @@ const Sidebar = () => {
   
   return (
     <Box w="30vw" bg="gray.200" p={4} overflowY="scroll" maxHeight="100%">
-      {/* Search Bar */}
-      <Input
-        mb={4}
-        type="text"
-        placeholder="Search users..."
-        value={searchedUser}
-        bgColor= "white"
-        onChange={(e) => setSearchedUser(e.target.value)}
-      />
 
-      {/* "Create Channel" button */}
-      <Button colorScheme="blue" bgColor="black" mb={4} onClick={openModal}>
-        Create Channel
-      </Button>
+        <Tabs isFitted variant='enclosed'>
+          <TabList mb='1em'>
+            <Tab>Channels</Tab>
+            <Tab>Users</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel>
+              {/* CHANNELS Tab */}
+              {/* "Create Channel" button */}
+              <Button colorScheme="blue" bgColor="black" mb={4} onClick={openModal}>
+                Create Channel
+              </Button>
+              {displayChannels}
+            </TabPanel>
 
-      <Divider my={2} borderColor="gray.400" />
+            {/*USERS Tab*/}
+            <TabPanel>
 
-      
-      <Flex direction="column" style={{overflow: "hidden"}}>
-      <Heading fontSize={'2xl'}>Channels:</Heading>
-        <Box style={{overflow:"hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-
-    {/* Display channel */}
-      {channelList.map((chan) => (
-            <Link 
-              // to={`/app/channels/${chan.id}`} 
-              key={chan.id}
-              // onClick={() => handleSelectUser(user)}
-              >
-                <Box
-                _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
-                mb={2}
-                p={2}
-                borderRadius="md"
-                  > 
+              {/* Search Bar */}
+              <Input
+                mb={4}
+                type="text"
+                placeholder="Search users..."
+                value={searchedUser}
+                bgColor="white"
+                onChange={(e) => setSearchedUser(e.target.value)}
+              />
+              
+            {searchedUser.trim() !== '' && filteredUsers.map((user) => (
+            <Link
+            to={`/app/m/${user.user_id}`}
+            key={user.user_id}
+            onClick={() => handleSelectUser(user)}
+             >
+            <Box
+              _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
+              mb={2}
+              p={2}
+              borderRadius="md"
+            >
               <Flex align="center" mb={2}>
+                <Avatar bg='black' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
                 <Text
-                  style={{overflow:"hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-                      {chan}
+                  style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                  {user.email.split('@')[0]}
                 </Text>
               </Flex>
-              </Box>
-              
-            </Link>
-          ))}
-     
+            </Box>
+          </Link>
+        ))}
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
 
-      <Divider my={2} borderColor="gray.400" />
-
-    {/* Display users */}
-{searchedUser.trim() !== '' && filteredUsers.map((user) => (
-  <Link 
-    to={`/app/m/${user.user_id}`} 
-    key={user.user_id}
-    onClick={() => handleSelectUser(user)}
-  >
-    <Box
-      _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
-      mb={2}
-      p={2}
-      borderRadius="md"
-    > 
-      <Flex align="center" mb={2}>
-        <Avatar bg='black' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
-        <Text
-          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-        >
-          {user.email.split('@')[0]}
-        </Text>
-      </Flex>
-    </Box>
-  </Link>
-))}
-       
-        </Box>
-      </Flex>
-
+      
        {/* Modal for creating a channel */}
        <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
