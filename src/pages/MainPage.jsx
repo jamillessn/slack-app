@@ -28,6 +28,7 @@ const App = () => {
     const emailFromLocalStorage = localStorage.getItem('uid');
     setUserEmail(emailFromLocalStorage);
     setCurrentUser(emailFromLocalStorage);
+    setSelectedUser(localStorage.getItem('selectedUser'));
 
     const { accessToken } = getHeaders();
     
@@ -84,14 +85,11 @@ const App = () => {
             )}
           </Flex>
             <Flex flexDirection="row" height="90vh">
-               <Sidebar/>
+               <Sidebar selectedUser={selectedUser}/>
 
               {/* Conversation Panel */}
               <Outlet selectedUser={selectedUser} />
             </Flex>
-          {/* Sidebar */}
-          
-          
         </Flex>
       </Box>
     </ChakraProvider>

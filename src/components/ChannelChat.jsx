@@ -5,7 +5,7 @@ import { getAllUsers } from '../utils/getAllUsers';
 import { getHeaders } from '../utils/getHeaders';
 import { format } from 'date-fns';
 
-export const ConversationPanel = () => {
+export const ChannelChat = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const headers = getHeaders();
   const [message, setMessage] = useState('');
@@ -160,8 +160,8 @@ const clearMessages = () => {
   
   return (
     <>
-    <Flex flexDirection="column"  maxHeight="100vh">
-      {/* Header */}
+    <Flex flexDirection="column" minHeight="100vh" maxHeight="100vh">
+        {/* Header */}
        <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
         <Text fontWeight="bold" fontSize="lg">
           Chatting with: {selectedUser}
@@ -177,11 +177,8 @@ const clearMessages = () => {
           </Flex>
         
 
-   
-      </Box>
-
-         {/* Message Box and Send Button */}
-         <Flex p={5} paddingTop={8} position="sticky" bottom="0" bgColor="white">
+      {/* Message Box and Send Button */}
+      <Flex p={5} paddingTop={8} position="sticky" bottom="0">
           <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -197,6 +194,7 @@ const clearMessages = () => {
               </Button>
         </Flex>
           
+      </Box>
     </Flex>
       
     </>

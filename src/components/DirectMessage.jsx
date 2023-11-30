@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { Box, Flex, Input, Button, Text } from '@chakra-ui/react';
-import { useLoaderData } from 'react-router-dom'
+import { Box, Flex, Input, Button, Text, Avatar, Heading } from '@chakra-ui/react';
+import { AiOutlineUser } from 'react-icons/ai';
+import { useLoaderData } from 'react-router-dom';
 import { getAllUsers } from '../utils/getAllUsers';
 import { getHeaders } from '../utils/getHeaders';
 import { format } from 'date-fns';
 
-export const ChannelChatBox = () => {
+export const DirectMessage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const headers = getHeaders();
   const [message, setMessage] = useState('');
@@ -50,40 +51,70 @@ export const ChannelChatBox = () => {
 
 useEffect(() => {
   clearMessages();
-  getMessages(receiver_id, headers);
   setSelectedUser(localStorage.getItem("selectedUser"))
+  getMessages(receiver_id, headers);
   getAllUsers();
 },[receiver_id]);
 
 const chatMessages = Object.keys(messages).map(msgId => {
+  
   const msg = messages[msgId];
   const isCurrentUser = msg.sender === headers.uid;
 
   const senderName = isCurrentUser ? 'You' : msg.sender.split('@')[0];
   const formattedDate = format(new Date(msg.created_at), 'M/dd/yyyy h:mm a');
 
-  return (
-    <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
-      <Text color='black' fontWeight='700'> {senderName} </Text>
-      <Text color='gray' fontSize={11}> {formattedDate} </Text>
-      <Text 
-        p={2} 
-        borderRadius="md" 
-        display="inline-block" 
-        maxWidth="70%"
-        bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
-        color={isCurrentUser ? 'white' : 'black'}
-      >
-        {msg.body}
-      </Text>
-    </div>
-  );
+    if(!isCurrentUser){
+      return (
+        <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+          
+          <Flex>
+          <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2}/>
+          <Text 
+            p={2} 
+            borderRadius="md" 
+            display="inline-block" 
+            maxWidth="70%"
+            bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
+            color={isCurrentUser ? 'white' : 'black'}
+          >
+            {msg.body}
+          </Text>
+          </Flex>
+          <Flex alignItems="center">
+          <Text color='black' fontSize={11} fontWeight={700}> {senderName},  </Text>
+          <Text color='gray' fontSize={11}> {formattedDate} </Text>
+          </Flex>
+          
+        </div>
+      );
+    }
+
+    else { 
+      return (
+      <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+        <Text 
+          p={2} 
+          borderRadius="md" 
+          display="inline-block" 
+          maxWidth="70%"
+          bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
+          color={isCurrentUser ? 'white' : 'black'}
+        >
+          {msg.body}
+        </Text>
+        <Flex alignItems="center" justifyContent="flex-end">
+          <Text color='black' fontSize={13} fontWeight={700}> {senderName},  </Text>
+          <Text color='gray' fontSize={11}> {formattedDate} </Text>
+         </Flex>
+      </div>
+    );}
+   
 });
 
 useLayoutEffect(() => {
   scrollToBottom();
 }, [chatMessages]);
-
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -91,10 +122,10 @@ useLayoutEffect(() => {
     }
   };
 
-  
 const clearMessages = () => {
   setMessages([]);
   setSelectedUser(null);
+  localStorage.setItem('selectedUser', "");
 }
 
   const handleSendClick = () => {
@@ -160,8 +191,9 @@ const clearMessages = () => {
   
   return (
     <>
-    <Flex flexDirection="column" minHeight="100vh" maxHeight="100vh">
-        {/* Header */}
+    <Box>
+    <Flex flexDirection="column"  maxHeight="100vh">
+      {/* Header */}
        <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
         <Text fontWeight="bold" fontSize="lg">
           Chatting with: {selectedUser}
@@ -170,15 +202,15 @@ const clearMessages = () => {
 
       {/* Chat Messages */}
       <Box minWidth="80vw" p={7} minHeight="100vh" maxHeight="100vh" overflowY="auto" >
-      
           <Flex direction="column">
+            
             {chatMessages}
             <div ref={scrollRef} />
           </Flex>
-        
+      </Box>
 
-      {/* Message Box and Send Button */}
-      <Flex p={5} paddingTop={8} position="sticky" bottom="0">
+         {/* Message Box and Send Button */}
+         <Flex p={5} paddingTop={8} position="sticky" bottom="0" bgColor="white">
           <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -194,9 +226,11 @@ const clearMessages = () => {
               </Button>
         </Flex>
           
-      </Box>
     </Flex>
       
+
+    </Box>
+    
     </>
      
   )
