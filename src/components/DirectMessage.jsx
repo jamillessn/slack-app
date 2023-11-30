@@ -10,7 +10,7 @@ export const DirectMessage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const headers = getHeaders();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]); // Maintain a list of messages
+  const [messages, setMessages] = useState([]); 
   const { receiver_id } = useLoaderData();
   const scrollRef = useRef(null);
   
@@ -54,6 +54,8 @@ useEffect(() => {
   setSelectedUser(localStorage.getItem("selectedUser"))
   getMessages(receiver_id, headers);
   getAllUsers();
+  
+  
 },[receiver_id]);
 
 const chatMessages = Object.keys(messages).map(msgId => {

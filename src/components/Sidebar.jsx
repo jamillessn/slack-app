@@ -14,7 +14,6 @@ import {
   ModalFooter,
   useDisclosure,
   Tabs, TabList, TabPanels, Tab, TabPanel,
-  Link as ChakraLink,
   Spinner,
   Avatar
 } from '@chakra-ui/react';
@@ -27,6 +26,7 @@ import { X } from 'react-feather';
 
 import { AiOutlineUser } from 'react-icons/ai';
 import { getHeaders } from '../utils/getHeaders';
+import { getChannelsList } from '../utils/getChannelsList';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import { getAllUsers } from '../utils/getAllUsers';
@@ -39,15 +39,29 @@ const Sidebar = () => {
   const [allUsers, setAllUsers] = useState([]); // Updated state for all users
   const [channelList, setChannelList] = useState([]);
   const [selectedUser, setSelectedUser] = useState([]);
-  const [addedMember, setAddedMembers] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [channelName, setChannelName] = useState('');
   const [channelMembers, setChannelMembers] = useState([]);
-  const [isChannelsOpen, setChannelsOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   const headers = getHeaders();
+ 
+  // Use the getChannelsList function
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const channels = await getChannelsList(headers);
+        setChannelList(channels);
+      } finally {
+        setIsLoading(false);
+      }
+    };
   
+    fetchData();
+    setUserId(headers.uid);
+  }, []);
+
   const handleSelectUser = (user) => {
     setSelectedUser(user.email);
     localStorage.setItem("selectedUser", user.email)
@@ -58,33 +72,8 @@ const Sidebar = () => {
   };
 
 
-   async function getChannelsList() {
-    try {
-      const res = await fetch("http://206.189.91.54/api/v1/channels/", {
-        method: "GET",
-        headers: {
-          'access-token': headers.accessToken || "",
-          'client': headers.client || "",
-          'expiry': headers.expiry || "",
-          'uid': headers.uid || "",
-          "Content-Type": "application/json"
-        },
-      });
-
-      const responseData = await res.json();
-
-      if (Array.isArray(responseData.data)) {
-        setChannelList(responseData.data.map(chan => chan.name));
-      }
-    } catch (error) {
-      toast.error(error.error, {
-        position: toast.POSITION.TOP_CENTER,
-      });
-    }
-  }
-
   // Create Channel button "Create"
-  const handleSubmit = async (channelName, channelMembers) => {
+  const handleCreateChannel = async (channelName, channelMembers) => {
     try {
       const res = await fetch("http://206.189.91.54/api/v1/channels/", {
         method: "POST",
@@ -119,9 +108,9 @@ const Sidebar = () => {
     }
   };
 
-  const handleCreateChannel = () => {
+  const handleSubmit = () => {
     const userIDs = [selectedUser];
-    handleSubmit(channelName, userIDs);
+    handleCreateChannel(channelName, userIDs);
     onClose();
   };
 
@@ -132,15 +121,15 @@ const Sidebar = () => {
     </div>
   );
 
-  const displayChannels = channelList.map((chanName) => (
-    <ChakraLink key={chanName} to={`/app/channels/${chanName}`}>
+  const displayChannels = channelList.map(channel => (
+    <Link key={channel.id} to={`/app/channels/${channel.id}`}>
       <Box
         _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
         mb={2}
         p={2}
         borderRadius="md"
       >
-        <Flex align="center" mb={2}>
+        <Flex align="center" mb={2} flexDirection="column">
           <IconContext.Provider
             value={{ color: 'blue', size: '20px' }}
           >
@@ -149,13 +138,13 @@ const Sidebar = () => {
           <Text
             style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
           >
-            {chanName}
+            {channel.channel_name}
           </Text>
         </Flex>
       </Box>
-    </ChakraLink>
+    </Link>
   ));
-
+  
   const CustomMultiValue = ({ data, innerProps, removeProps }) => (
     <Flex align="center" {...innerProps}>
       <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
@@ -187,6 +176,7 @@ const Sidebar = () => {
   // Populate the sidebar with users
   useEffect(() => {
     getChannelsList();
+
     fetchData();
     setUserId(headers.uid);
   }, []);
@@ -237,7 +227,6 @@ useEffect(() => {
 }, [searchedUser, usersList]);
 
   
-
   return (
     <Box minWidth="25vw" minHeight="30vh" bg="gray.200" p={4} overflowY="scroll" maxHeight="100%">
 
@@ -339,7 +328,7 @@ useEffect(() => {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" bgColor="black" mr={3} onClick={handleCreateChannel}>
+            <Button colorScheme="blue" bgColor="black" mr={3} onClick={handleSubmit}>
               Create
             </Button>
             <Button onClick={onClose}>Cancel</Button>
