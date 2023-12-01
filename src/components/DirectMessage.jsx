@@ -69,24 +69,36 @@ const chatMessages = Object.keys(messages).map(msgId => {
     if(!isCurrentUser){
       return (
         <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+          <Flex key={msgId} style={{ marginTop: 12 }} justify={isCurrentUser ? 'flex-end' : 'flex-start'}>
+  {!isCurrentUser && (
+    <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+  )}
+  <Box>
+    <Flex align={isCurrentUser ? 'flex-end' : 'flex-start'} alignItems="center">
+    <Text color='black' fontSize={15} fontWeight={700} mb={1}>
+        {senderName}  &nbsp;
+      </Text>
+      <Text color='gray' fontSize={11}> {formattedDate} </Text>
+    </Flex>
+
+    <Flex direction="column" >
+     
+      <Text
+        p={2}
+        borderRadius="md"
+        display="inline-block"
+        maxWidth="70%"
+        bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
+        color={isCurrentUser ? 'white' : 'black'}
+      >
+        {msg.body}
+      </Text>
+    </Flex>
+  </Box>
+</Flex>
+
+
           
-          <Flex>
-          <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2}/>
-          <Text 
-            p={2} 
-            borderRadius="md" 
-            display="inline-block" 
-            maxWidth="70%"
-            bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
-            color={isCurrentUser ? 'white' : 'black'}
-          >
-            {msg.body}
-          </Text>
-          </Flex>
-          <Flex alignItems="center">
-          <Text color='black' fontSize={11} fontWeight={700}> {senderName},  </Text>
-          <Text color='gray' fontSize={11}> {formattedDate} </Text>
-          </Flex>
           
         </div>
       );
@@ -103,10 +115,12 @@ const chatMessages = Object.keys(messages).map(msgId => {
           bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
           color={isCurrentUser ? 'white' : 'black'}
         >
+         
+          <Text textAlign="left">
           {msg.body}
+            </Text>
         </Text>
         <Flex alignItems="center" justifyContent="flex-end">
-          <Text color='black' fontSize={13} fontWeight={700}> {senderName},  </Text>
           <Text color='gray' fontSize={11}> {formattedDate} </Text>
          </Flex>
       </div>
@@ -194,7 +208,7 @@ const clearMessages = () => {
   return (
     <>
     <Box>
-    <Flex flexDirection="column"  maxHeight="100vh">
+    <Flex flexDirection="column" maxHeight="95vh">
       {/* Header */}
        <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
         <Text fontWeight="bold" fontSize="lg">
@@ -203,16 +217,15 @@ const clearMessages = () => {
       </Box>
 
       {/* Chat Messages */}
-      <Box minWidth="80vw" p={7} minHeight="100vh" maxHeight="100vh" overflowY="auto" >
+      <Box minWidth="80vw" paddingRight={7} paddingLeft={7}  overflowY="auto" position="relative">
           <Flex direction="column">
             
             {chatMessages}
             <div ref={scrollRef} />
-          </Flex>
-      </Box>
 
-         {/* Message Box and Send Button */}
-         <Flex p={5} paddingTop={8} position="sticky" bottom="0" bgColor="white">
+        
+          {/* Message Box and Send Button */}
+          <Flex p={6} bgColor="white" bottom="0" position="sticky">
           <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -220,13 +233,23 @@ const clearMessages = () => {
                 mr={5}
                 onKeyDown={handleEnter}
               />
-              <Button 
+              <Button   
                 onClick={handleSendClick} 
                 bgColor="#0101FE" 
                 colorScheme="blue">
                 Send
               </Button>
         </Flex>
+          </Flex>
+
+
+          
+
+
+
+      </Box>
+
+         
           
     </Flex>
       

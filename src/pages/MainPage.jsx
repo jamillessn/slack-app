@@ -53,7 +53,7 @@ const App = () => {
   return (
     <ChakraProvider theme={customTheme}>
       <CSSReset />
-      <Box>
+      <Box maxHeight="100vh" overflow="hidden">
         {/* Main Content */}
         <Flex flexDirection="column">
           {/* Header */}
@@ -84,9 +84,11 @@ const App = () => {
               </Flex>
             )}
           </Flex>
-            <Flex flexDirection="row" height="90vh">
+          
+            <Flex flexDirection="row" overflow="hidden" maxWidth="100vw">
+              
               {/* Sidebar Panel */}
-               <Sidebar selectedUser={selectedUser}/>
+              <Sidebar selectedUser={selectedUser}/>
 
               {/* Conversation Panel */}
               <Outlet selectedUser={selectedUser} />

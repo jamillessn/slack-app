@@ -2,52 +2,17 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { Box, Flex, Input, Button, Text } from '@chakra-ui/react';
 import { useLoaderData } from 'react-router-dom'
 import { getHeaders } from '../utils/getHeaders';
+import { getChannelsList } from '../utils/getChannelsList';
 import { format } from 'date-fns';
 
 export const ChannelChat = () => {
   const [selectedUser, setSelectedUser] = useState(null);
-  const [channelData, setChannelData] = useState(null);
+  const [channelData, setChannelData] = useState([]);
   const [message, setMessage] = useState('');
   const scrollRef = useRef(null);
   const headers = getHeaders();
   const { id, resData } = useLoaderData();
-  // const currentChannelName 
-  
-//   const getChannelData = () => {
-//     const options = {
-//       method: 'GET',
-//       headers: {
-//         'access-token': headers.accessToken,
-//         'client' : headers.client,
-//         'expiry' : headers.expiry,
-//         'uid' : headers.uid
-//       }
-//     }
-
-//     // const url = "http://206.189.91.54/api/v1//messages?receiver_id=" + receiver_id + "&receiver_class=User";
-
-//     fetch(resData, options)
-//     .then(response => {
-//         return response.json();
-//     })
-//     .then(data => {
-//         const channelData = data.data; 
-//         const currentChannelName ="";
-//         const channelMessages = {};
-
-//         for(const item of channelData) {
-//           channelMessages[item.id] = {
-//                 id: item.sender.email, 
-//                 name: item.receiver.email, 
-//             }
-            
-//         }
-//         console.log(currentChannelName)
-//         setChannelData({...channelData});
-//       })
-
-// }
-
+  // const { id, channel_name } = getChannelsList();
 
   const handleSendClick = () => {
     setMessage('');
@@ -63,9 +28,31 @@ export const ChannelChat = () => {
         setMessage('');
     }
 }
-  // useEffect(()=> {
-  //   getChannelData(id,name);
-  // })
+
+const getSelectedChannelName = (selectedChannelId, channelData) => {
+  const selectedChannel = channelData.find(channel => channel.id === selectedChannelId);
+  return selectedChannel ? selectedChannel.channel_name : '';
+};
+
+
+//Retrives id and channel_name from getChannelsList
+useEffect(()=> {
+  const getChannelData = async() => {
+    try {
+      const channelsData = await getChannelsList(headers);
+
+      //use ChannelsList 
+      setChannelData(channelsData);
+      console.log(channelData)
+      
+    } catch (error) {
+      console.log('Error fetching channels', error);
+    }
+  };
+
+  getChannelData();
+}, []);
+
 
   return (
     <>
@@ -73,7 +60,7 @@ export const ChannelChat = () => {
         {/* Header */}
        <Box p={4} borderBottom="1px solid #ccc" textAlign="center" maxWidth= "100vw">
         <Text fontWeight="bold" fontSize="lg">
-          {id}
+          {getSelectedChannelName(selectedUser, channelData)}
         </Text>
       </Box>
 

@@ -100,8 +100,6 @@ function Register() {
           <Heading fontSize={'2xl'}>Create an account</Heading>
         </Flex>
       
-        <FormLabel>Name</FormLabel>
-
         <FormLabel>Email address</FormLabel>
          <Input
           type='email'

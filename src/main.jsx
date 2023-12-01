@@ -53,7 +53,7 @@ const router = createBrowserRouter([
         path: "channels/:chan_id",
         element: <ChannelChat />,
         loader: async ({params}) => {
-          const resData = await fetch(`/api/v1/channels/${params.id}`, {
+          const resData = await fetch(`/api/v1/channels/${params.chan_id}`, {
             method: 'GET',
             headers: {
               "access-token": localStorage.getItem("access-token") || "",
@@ -63,7 +63,7 @@ const router = createBrowserRouter([
               "Content-Type": "application/json"
             }
       })
-          return { id: params.id, resData: resData}
+          return { id: params.chan_id, resData: resData}
       }
     }
 ]}

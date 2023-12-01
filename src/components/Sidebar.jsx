@@ -228,7 +228,7 @@ useEffect(() => {
 
   
   return (
-    <Box minWidth="25vw" minHeight="30vh" bg="gray.200" p={4} overflowY="scroll" maxHeight="100%">
+    <Box minWidth="20vw" minHeight="30vh" bg="gray.200" p={4} overflowX="hidden" height="95vh" position="sticky">
 
       <Tabs isFitted variant='enclosed'>
         <TabList mb='1em'>
