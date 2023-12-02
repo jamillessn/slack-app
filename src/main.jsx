@@ -1,16 +1,16 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import LandingPage from './pages/LandingPage'
-import Register from './pages/Register'
-import MainPage from './pages/MainPage'
-import { None } from './components/None'
-import './App.css'
-import { ChakraProvider } from "@chakra-ui/react"
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import Register from './pages/Register';
+import MainPage from './pages/MainPage';
+import { None } from './components/None';
+import './App.css';
+import { ChakraProvider } from "@chakra-ui/react";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { ConversationPanel } from './components/ConversationPanel'
-
+import { ChannelChat } from './components/ChannelChat';
+import { DirectMessage } from './components/DirectMessage';
 
 const router = createBrowserRouter([
   {
@@ -24,7 +24,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/app',
-    element: <MainPage />,
+    element: <MainPage /> ,
     children: [
       {
         path: "",
@@ -33,7 +33,7 @@ const router = createBrowserRouter([
       },
       {
         path: "m/:receiver_id",
-        element: <ConversationPanel />,
+        element: <DirectMessage />,
         loader: async ({params}) => {
           const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
             method: 'GET',
@@ -51,9 +51,9 @@ const router = createBrowserRouter([
       },
       {
         path: "channels/:chan_id",
-        element: <ConversationPanel />,
+        element:<ChannelChat /> ,
         loader: async ({params}) => {
-          const data = await fetch(`/api/v1/messages?receiver_id=${params.receiver_id}&receiver_class=User`, {
+          const resData = await fetch(`/api/v1/channels/${params.chan_id}`, {
             method: 'GET',
             headers: {
               "access-token": localStorage.getItem("access-token") || "",
@@ -63,13 +63,12 @@ const router = createBrowserRouter([
               "Content-Type": "application/json"
             }
       })
-          return { chan_id: params.chan_id, data: data}
-        }
+          return { id: params.chan_id, resData: resData}
       }
+    }
+]}
       
-    ]
-  }
-]);
+    ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

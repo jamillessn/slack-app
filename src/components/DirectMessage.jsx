@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { Box, Flex, Input, Button, Text } from '@chakra-ui/react';
-import { useLoaderData } from 'react-router-dom'
+import { Box, Flex, Input, Button, Text, Avatar, Heading } from '@chakra-ui/react';
+import { AiOutlineUser } from 'react-icons/ai';
+import { useLoaderData } from 'react-router-dom';
+import { SlOptions } from "react-icons/sl";
 import { getAllUsers } from '../utils/getAllUsers';
 import { getHeaders } from '../utils/getHeaders';
 import { format } from 'date-fns';
+import { BiSend } from "react-icons/bi";
 
-export const ConversationPanel = () => {
+export const DirectMessage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const headers = getHeaders();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]); // Maintain a list of messages
+  const [messages, setMessages] = useState([]); 
   const { receiver_id } = useLoaderData();
   const scrollRef = useRef(null);
   
@@ -44,46 +47,90 @@ export const ConversationPanel = () => {
             
         }
         setMessages({...filteredMessages});
-      })
 
+      })
+setSelectedUser(localStorage.getItem("selectedUser"));
 }
 
 useEffect(() => {
   clearMessages();
   getMessages(receiver_id, headers);
-  setSelectedUser(localStorage.getItem("selectedUser"))
   getAllUsers();
+  
 },[receiver_id]);
 
 const chatMessages = Object.keys(messages).map(msgId => {
+  
   const msg = messages[msgId];
   const isCurrentUser = msg.sender === headers.uid;
 
   const senderName = isCurrentUser ? 'You' : msg.sender.split('@')[0];
   const formattedDate = format(new Date(msg.created_at), 'M/dd/yyyy h:mm a');
-
-  return (
-    <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
-      <Text color='black' fontWeight='700'> {senderName} </Text>
+  
+  if(!messages){
+    console.log('No Messages');
+  }
+    if(!isCurrentUser){
+      return (
+        <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+          <Flex key={msgId} style={{ marginTop: 12 }} justify={isCurrentUser ? 'flex-end' : 'flex-start'}>
+  {!isCurrentUser && (
+    <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+  )}
+  <Box>
+    <Flex align={isCurrentUser ? 'flex-end' : 'flex-start'} alignItems="center">
+    <Text color='black' fontSize={15} fontWeight={700} mb={1}>
+        {senderName}  &nbsp;
+      </Text>
       <Text color='gray' fontSize={11}> {formattedDate} </Text>
-      <Text 
-        p={2} 
-        borderRadius="md" 
-        display="inline-block" 
+    </Flex>
+
+    <Flex direction="column" >
+     
+      <Text
+        p={2}
+        borderRadius="md"
+        display="inline-block"
         maxWidth="70%"
         bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
         color={isCurrentUser ? 'white' : 'black'}
       >
         {msg.body}
       </Text>
-    </div>
-  );
+    </Flex>
+  </Box>
+</Flex>
+        </div>
+      );
+    }
+
+    else { 
+      return (
+      <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+        <Text 
+          p={2} 
+          borderRadius="md" 
+          display="inline-block" 
+          maxWidth="70%"
+          bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
+          color={isCurrentUser ? 'white' : 'black'}
+        >
+         
+          <Text textAlign="left">
+          {msg.body}
+            </Text>
+        </Text>
+        <Flex alignItems="center" justifyContent="flex-end">
+          <Text color='gray' fontSize={11}> {formattedDate} </Text>
+         </Flex>
+      </div>
+    );}
+   
 });
 
 useLayoutEffect(() => {
   scrollToBottom();
 }, [chatMessages]);
-
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -91,11 +138,10 @@ useLayoutEffect(() => {
     }
   };
 
+  const clearMessages = () => {
+    setMessages([]);
+  };
   
-const clearMessages = () => {
-  setMessages([]);
-  setSelectedUser(null);
-}
 
   const handleSendClick = () => {
     sendMessage({message, receiver_id, headers});
@@ -152,53 +198,66 @@ const clearMessages = () => {
                 }
 
                 setMessages({...messages, ...filteredMessage});
+                
+                
             } else {
                 toast.error("There is an error sending message.");
             }
         })
 }
   
-  return (
-    <>
-    <Flex flexDirection="column" minHeight="100vh">
-         {/* Header */}
-       <Box p={4} borderBottom="1px solid #ccc" textAlign="center">
-        <Text fontWeight="bold" fontSize="lg">
-          Chatting with: {selectedUser}
-        </Text>
-      </Box>
+return (
+  <>
+    {/* Main Container */}
+    <Box height="90vh" display="flex" flexDirection="column">
+    <Box p={3} borderBottom="1px solid #ccc" textAlign="left" position="relative">
+          
+          {/* Conversation Header */}
+          <Flex alignItems="center">
+            <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+            <Text fontWeight="bold" fontSize="lg">
+              {selectedUser}
+            </Text>
+          </Flex>
+            
+    </Box>
+      {/* Content Container */}
+      <Box overflowY="auto" flex="1">
+       
 
-      {/* Chat Messages */}
-      <Box minWidth="80vw" p={7} minHeight="100vh" overflowY="auto" >
-      
+
+        {/* Chat Messages */}
+        <Box minWidth="80vw" paddingRight={7} paddingLeft={7} position="relative">
           <Flex direction="column">
             {chatMessages}
             <div ref={scrollRef} />
           </Flex>
-        
+        </Box>
+      </Box>
 
       {/* Message Box and Send Button */}
-      <Flex p={5} paddingTop={8} position="sticky" bottom="0">
-          <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message..."
-                mr={5}
-                onKeyDown={handleEnter}
-              />
-              <Button 
-                onClick={handleSendClick} 
-                bgColor="#0101FE" 
-                colorScheme="blue">
-                Send
-              </Button>
-        </Flex>
-          
-      </Box>
-    </Flex>
-      
-    </>
-     
-  )
-  
-}
+      <Flex
+        p={6}
+        bgColor="white"
+        position="sticky"
+        bottom="0"
+        justifyContent="space-between"
+        style={{ width: '100%', zIndex: 1 }}
+      >
+        <Input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type your message..."
+          mr={5}
+          onKeyDown={handleEnter}
+        />
+        <Button onClick={handleSendClick} bgColor="#0101FE" colorScheme="blue" borderRadius="%"
+         icon={<BiSend fontSize="1.5rem" />}>
+        <BiSend />
+        </Button>
+      </Flex>
+    </Box>
+  </>
+);
+
+};

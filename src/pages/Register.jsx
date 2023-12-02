@@ -17,12 +17,10 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function Register() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [conf_password, setConfPassword] = useState('');
 
-  const handleNameChange = (e) => setUserName(e.target.value);
   const handleEmailChange = (e) => setEmail(e.target.value);
   const handlePasswordChange = (e) => setPassword(e.target.value);
   const handleConfPasswordChange = (e) => setConfPassword(e.target.value);
@@ -102,15 +100,6 @@ function Register() {
           <Heading fontSize={'2xl'}>Create an account</Heading>
         </Flex>
       
-        <FormLabel>Name</FormLabel>
-        <Input 
-        type='text' 
-        placeholder='First Name' 
-        value={userName} 
-        onChange={handleNameChange}
-        name='userName' 
-        id='userName'/>
-
         <FormLabel>Email address</FormLabel>
          <Input
           type='email'

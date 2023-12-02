@@ -19,6 +19,7 @@ const customTheme = extendTheme({
 
 const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [chattingWithText, setChattingWithText] = useState('');
   const [conversations, setConversation] = useState([]);
   const [userEmail, setUserEmail] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -28,6 +29,7 @@ const App = () => {
     const emailFromLocalStorage = localStorage.getItem('uid');
     setUserEmail(emailFromLocalStorage);
     setCurrentUser(emailFromLocalStorage);
+    setSelectedUser(localStorage.getItem('selectedUser'));
 
     const { accessToken } = getHeaders();
     
@@ -43,16 +45,17 @@ const App = () => {
 
   const handleSignOut = () => {
     setCurrentUser(null);
-    setSelectedUser(null);
+    // setSelectedUser(null);
     setConversation([]);
     localStorage.clear();
     navigate('/');
   };
 
+  
   return (
     <ChakraProvider theme={customTheme}>
       <CSSReset />
-      <Box w="100vw" minHeight="100vh">
+      <Box maxHeight="100vh" overflow="hidden">
         {/* Main Content */}
         <Flex flexDirection="column">
           {/* Header */}
@@ -83,15 +86,15 @@ const App = () => {
               </Flex>
             )}
           </Flex>
-            <Flex flexDirection="row" height="90vh">
-               <Sidebar/>
+          
+            <Flex flexDirection="row" overflow="hidden" maxWidth="100vw">
+              
+              {/* Sidebar Panel */}
+              <Sidebar selectedUser={selectedUser} chattingWithText={chattingWithText}/>
 
               {/* Conversation Panel */}
-              <Outlet selectedUser={selectedUser} />
+              <Outlet selectedUser={selectedUser} chattingWithText={chattingWithText}/>
             </Flex>
-          {/* Sidebar */}
-          
-          
         </Flex>
       </Box>
     </ChakraProvider>

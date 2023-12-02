@@ -33,7 +33,6 @@ console.log(email, password)
    localStorage.setItem("client", res.headers.get("client"))
 
     const responseData = await res.json();
-    console.log(responseData)
 
     if(responseData.data){
       navigate("/app");
