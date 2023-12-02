@@ -71,7 +71,7 @@ const Sidebar = () => {
   };
 
   // Create Channel button "Create"
-  const handleCreateChannel = async (channelName) => {
+  const handleCreateChannel = async (channelName, channelMembers) => {
     try {
       const res = await fetch("http://206.189.91.54/api/v1/channels/", {
         method: "POST",
@@ -83,7 +83,7 @@ const Sidebar = () => {
           'uid': headers.uid || "",
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name: channelName, user_ids: localStorage.getItem("uid") })
+        body: JSON.stringify({ name: channelName, user_ids: channelMembers })
       });
 
       const responseData = await res.json();
