@@ -19,6 +19,7 @@ const customTheme = extendTheme({
 
 const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [chattingWithText, setChattingWithText] = useState('');
   const [conversations, setConversation] = useState([]);
   const [userEmail, setUserEmail] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -44,12 +45,13 @@ const App = () => {
 
   const handleSignOut = () => {
     setCurrentUser(null);
-    setSelectedUser(null);
+    // setSelectedUser(null);
     setConversation([]);
     localStorage.clear();
     navigate('/');
   };
 
+  
   return (
     <ChakraProvider theme={customTheme}>
       <CSSReset />
@@ -88,10 +90,10 @@ const App = () => {
             <Flex flexDirection="row" overflow="hidden" maxWidth="100vw">
               
               {/* Sidebar Panel */}
-              <Sidebar selectedUser={selectedUser}/>
+              <Sidebar selectedUser={selectedUser} chattingWithText={chattingWithText}/>
 
               {/* Conversation Panel */}
-              <Outlet selectedUser={selectedUser} />
+              <Outlet selectedUser={selectedUser} chattingWithText={chattingWithText}/>
             </Flex>
         </Flex>
       </Box>

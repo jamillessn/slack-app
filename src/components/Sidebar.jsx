@@ -5,6 +5,7 @@ import {
   Input,
   Text,
   Button,
+  Select,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -15,13 +16,12 @@ import {
   useDisclosure,
   Tabs, TabList, TabPanels, Tab, TabPanel,
   Spinner,
-  Avatar
+  Avatar,
+  AvatarGroup
 } from '@chakra-ui/react';
 import { IconContext } from "react-icons";
 import { HiChatBubbleLeftEllipsis } from "react-icons/hi2";
 import { FaUserGroup } from "react-icons/fa6";
-
-import Select from 'react-select';
 import { X } from 'react-feather';
 
 import { AiOutlineUser } from 'react-icons/ai';
@@ -43,6 +43,9 @@ const Sidebar = () => {
   const [channelName, setChannelName] = useState('');
   const [channelMembers, setChannelMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [selectedChannel, setSelectedChannel] = useState();
+  const [channelData, setChannelData] = useState([]);
 
   const headers = getHeaders();
  
@@ -63,17 +66,12 @@ const Sidebar = () => {
   }, []);
 
   const handleSelectUser = (user) => {
+    localStorage.setItem("selectedUser", user.email);
     setSelectedUser(user.email);
-    localStorage.setItem("selectedUser", user.email)
   };
-
-  const openModal = () => {
-    onOpen();
-  };
-
 
   // Create Channel button "Create"
-  const handleCreateChannel = async (channelName, channelMembers) => {
+  const handleCreateChannel = async (channelName) => {
     try {
       const res = await fetch("http://206.189.91.54/api/v1/channels/", {
         method: "POST",
@@ -85,22 +83,30 @@ const Sidebar = () => {
           'uid': headers.uid || "",
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name: channelName, user_ids: channelMembers })
+        body: JSON.stringify({ name: channelName, user_ids: localStorage.getItem("uid") })
       });
 
+      const responseData = await res.json();
+
+      if (!responseData.errors[0]) {
+        const newChannel = responseData.data; // Assuming your API returns the channel information
+        setSelectedChannel(newChannel);
+       
+        if (responseData.errors[0]) {
+          toast.error(responseData.errors[0], {
+            position: toast.POSITION.TOP_CENTER,
+            autoClose: 2000,
+          });
+        }
+      }
+
+      
       toast.success('Channel created!', {
         position: toast.POSITION.TOP_CENTER,
         autoClose: 2000,
       });
 
-      const responseData = await res.json();
 
-      if (responseData.errors[0]) {
-        toast.error(responseData.errors[0], {
-          position: toast.POSITION.TOP_CENTER,
-          autoClose: 2000,
-        });
-      }
     } catch (error) {
       toast.error(error.error, {
         position: toast.POSITION.TOP_CENTER,
@@ -108,11 +114,43 @@ const Sidebar = () => {
     }
   };
 
+  const openModal = () => {
+    onOpen();
+  };
+
+  const handleSelectChannel = (channelId) => {
+    try {
+      const selectedChannel = channelData.find((channel) => channel.id === channelId);
+  
+      if (selectedChannel) {
+        localStorage.setItem('selectedChannel', selectedChannel.channel_name);
+        setSelectedChannel(selectedChannel.channel_name);
+      }
+    } catch (error) {
+      console.error('Error selecting channel:', error);
+    }
+  };
+  
   const handleSubmit = () => {
-    const userIDs = [selectedUser];
+    const userIDs = [selectedMembers];
     handleCreateChannel(channelName, userIDs);
     onClose();
   };
+
+  //Retrives id and channel_name from getChannelsList
+  useEffect(()=> {
+    const getChannelData = async() => {
+      try {
+        const channelsData = await getChannelsList(headers);
+        setChannelData(channelsData);
+      } catch (error) {
+        console.log('Error fetching channels', error);
+      }
+    };
+  
+    getChannelData();
+  }, []);
+
 
   const CustomOption = ({ innerProps, label }) => (
     <div {...innerProps}>
@@ -121,22 +159,29 @@ const Sidebar = () => {
     </div>
   );
 
-  const displayChannels = channelList.map(channel => (
-    <Link key={channel.id} to={`/app/channels/${channel.id}`}>
+  const displayChannels = channelList.map(channel => 
+    (
+   
+    <Link key={channel.id} to={`/app/channels/${channel.id}`} 
+    onClick={handleSelectChannel(channel.name)}
+    >
       <Box
         _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
         mb={2}
-        p={2}
+        pb={2}
         borderRadius="md"
       >
-        <Flex align="center" mb={2} flexDirection="column">
+        <Flex align="center" mb={2} >
           <IconContext.Provider
-            value={{ color: 'blue', size: '20px' }}
+            value={{ color: 'white', size: '20px' }}
           >
-            <FaUserGroup />
+          <AvatarGroup size="md" max={2} mr={2}>
+          <Avatar bg='black' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
+          <Avatar bg='blue' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
+          </AvatarGroup>
           </IconContext.Provider>
           <Text
-            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "700"}}
           >
             {channel.channel_name}
           </Text>
@@ -146,8 +191,8 @@ const Sidebar = () => {
   ));
   
   const CustomMultiValue = ({ data, innerProps, removeProps }) => (
-    <Flex align="center" {...innerProps}>
-      <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+    <Flex align="center" {...innerProps} bgColor="#f0f0f0" minWidth="10px" borderRadius="50px" paddingRight="5px" paddingLeft="5px">
+      <Avatar size="2" bg="black" icon={<AiOutlineUser fontSize="1rem" />} mr={2} />
       {data.label}
       <X
         size={16}
@@ -176,7 +221,6 @@ const Sidebar = () => {
   // Populate the sidebar with users
   useEffect(() => {
     getChannelsList();
-
     fetchData();
     setUserId(headers.uid);
   }, []);
@@ -228,7 +272,7 @@ useEffect(() => {
 
   
   return (
-    <Box minWidth="20vw" minHeight="30vh" bg="gray.200" p={4} overflowX="hidden" height="95vh" position="sticky">
+    <Box minWidth="20vw" minHeight="30vh" bg="gray.200" p={4} overflowX="hidden" height="90vh" position="sticky">
 
       <Tabs isFitted variant='enclosed'>
         <TabList mb='1em'>
