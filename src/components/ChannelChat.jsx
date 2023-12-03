@@ -13,11 +13,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Select,
-  Tabs, TabList, TabPanels, Tab, TabPanel,
-  Spinner,
-  Avatar,
-  AvatarGroup
 } from '@chakra-ui/react';
 import { useLoaderData } from 'react-router-dom';
 import { getHeaders } from '../utils/getHeaders';
@@ -26,7 +21,6 @@ import { getChannelsList } from '../utils/getChannelsList';
 import { getAllUsers } from '../utils/getAllUsers';
 
 export const ChannelChat = () => {
-  const [selectedUser, setSelectedUser] = useState(null);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [channelData, setChannelData] = useState([]);
   const [channelList, setChannelList] = useState([]);
@@ -41,17 +35,17 @@ export const ChannelChat = () => {
   const usersList = getAllUsers();
 
  // Use the getChannelsList function
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const channels = await getChannelsList(headers);
-      setChannelList(channels);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+ const fetchData = async () => {
+  try {
+    setIsLoading(true);
+    const channels = await getChannelsList(headers);
+    setChannelList(channels);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
+ useEffect(() => {
   fetchData();
 }, []);
 
@@ -70,7 +64,6 @@ export const ChannelChat = () => {
         setMessage('');
     }
 }
-
 
 return (
   <>

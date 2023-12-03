@@ -45,7 +45,6 @@ const App = () => {
 
   const handleSignOut = () => {
     setCurrentUser(null);
-    // setSelectedUser(null);
     setConversation([]);
     localStorage.clear();
     navigate('/');
