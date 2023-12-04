@@ -5,7 +5,6 @@ import {
   Input,
   Text,
   Button,
-  Select,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -23,22 +22,22 @@ import { IconContext } from "react-icons";
 import { HiChatBubbleLeftEllipsis } from "react-icons/hi2";
 import { FaUserGroup } from "react-icons/fa6";
 import { X } from 'react-feather';
-
 import { AiOutlineUser } from 'react-icons/ai';
-import { getHeaders } from '../utils/getHeaders';
-import { getChannelsList } from '../utils/getChannelsList';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import { getAllUsers } from '../utils/getAllUsers';
+import { getHeaders } from '../utils/getHeaders';
+import { getChannelsList } from '../utils/getChannelsList';
 
 const Sidebar = () => {
   const [userId, setUserId] = useState([]);
   const [searchedUser, setSearchedUser] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [usersList, setUsersList] = useState([]);
-  const [allUsers, setAllUsers] = useState([]); // Updated state for all users
+
+  const [usersList, setUsersList] = useState([]); // array that contains all fetched users from API
+
   const [channelList, setChannelList] = useState([]);
-  const [selectedUser, setSelectedUser] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [channelName, setChannelName] = useState('');
   const [channelMembers, setChannelMembers] = useState([]);
@@ -46,6 +45,9 @@ const Sidebar = () => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [channelData, setChannelData] = useState([]);
+  const [addedChannelMembers, setAddedChannelMembers] = useState([]);
+  const [userOptions, setUserOptions] = useState([]);
+
 
   const headers = getHeaders();
  
@@ -71,7 +73,7 @@ const Sidebar = () => {
   };
 
   // Create Channel button "Create"
-  const handleCreateChannel = async (channelName) => {
+  const handleCreateChannel = async () => {
     try {
       const res = await fetch("http://206.189.91.54/api/v1/channels/", {
         method: "POST",
@@ -83,36 +85,55 @@ const Sidebar = () => {
           'uid': headers.uid || "",
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name: channelName, user_ids: localStorage.getItem("uid") })
+        body: JSON.stringify({
+          name: channelName,
+          user_ids: addedChannelMembers
+        })
       });
-
+  
       const responseData = await res.json();
-
+  
+      console.log(responseData)
       if (!responseData.errors[0]) {
-        const newChannel = responseData.data; // Assuming your API returns the channel information
-        setSelectedChannel(newChannel);
-       
-        if (responseData.errors[0]) {
-          toast.error(responseData.errors[0], {
-            position: toast.POSITION.TOP_CENTER,
-            autoClose: 2000,
-          });
-        }
+        toast.success('Channel created!', {
+          position: toast.POSITION.TOP_CENTER,
+          autoClose: 2000,
+        });
+      } else {
+        toast.error(responseData.errors[0], {
+          position: toast.POSITION.TOP_CENTER,
+          autoClose: 2000,
+        });
       }
-
-      
-      toast.success('Channel created!', {
-        position: toast.POSITION.TOP_CENTER,
-        autoClose: 2000,
-      });
-
-
     } catch (error) {
       toast.error(error.error, {
         position: toast.POSITION.TOP_CENTER,
       });
     }
   };
+  
+  //fetch members to be added on Create Channel Modal
+  const fetchUserOptions = async (searchTerm) => {
+    try {
+      setIsLoading(true); // Set loading state to true
+      const users = await getAllUsers();
+  
+      // Filter users based on the search term and check if they are not in addedChannelMembers
+      const filteredOptions = users.filter(user =>
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !addedChannelMembers.includes(user.user_id)
+      );
+  
+      setUserOptions(filteredOptions);
+    } catch (error) {
+      console.error('Error fetching user options:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  
+  
 
   const openModal = () => {
     onOpen();
@@ -121,10 +142,9 @@ const Sidebar = () => {
   const handleSelectChannel = (channelId) => {
     try {
       const selectedChannel = channelData.find((channel) => channel.id === channelId);
-  
+      
       if (selectedChannel) {
         localStorage.setItem('selectedChannel', selectedChannel.channel_name);
-        setSelectedChannel(selectedChannel.channel_name);
       }
     } catch (error) {
       console.error('Error selecting channel:', error);
@@ -133,23 +153,10 @@ const Sidebar = () => {
   
   const handleSubmit = () => {
     const userIDs = [selectedMembers];
-    handleCreateChannel(channelName, userIDs);
     onClose();
+    handleCreateChannel(channelName, userIDs);
+    fetchData();
   };
-
-  //Retrives id and channel_name from getChannelsList
-  useEffect(()=> {
-    const getChannelData = async() => {
-      try {
-        const channelsData = await getChannelsList(headers);
-        setChannelData(channelsData);
-      } catch (error) {
-        console.log('Error fetching channels', error);
-      }
-    };
-  
-    getChannelData();
-  }, []);
 
 
   const CustomOption = ({ innerProps, label }) => (
@@ -163,7 +170,6 @@ const Sidebar = () => {
     (
    
     <Link key={channel.id} to={`/app/channels/${channel.id}`} 
-    onClick={handleSelectChannel(channel.name)}
     >
       <Box
         _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
@@ -210,7 +216,6 @@ const Sidebar = () => {
       setIsLoading(true);
       const users = await getAllUsers();
       setUsersList(users);
-      setAllUsers(users); // Update allUsers state
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -225,50 +230,45 @@ const Sidebar = () => {
     setUserId(headers.uid);
   }, []);
 
-useEffect(() => {
-  let timeoutId;
-
-  // Filter users when typing on the search bar
-  const handleSearch = async () => {
-    clearTimeout(timeoutId);
-
-    // Show loading only if there's a change in the search bar value
-    if (searchedUser.trim() !== '') {
-      setIsLoading(true);
-
-      // Show loading after 5 seconds
-      timeoutId = setTimeout(() => {
+  useEffect(() => {
+    let timeoutId;
+  
+    // Filter users when typing on the search bar
+    const handleSearch = async () => {
+      clearTimeout(timeoutId);
+  
+      // Show loading only if there's a change in the search bar value
+      if (searchedUser.trim() !== '') {
         setIsLoading(true);
-      }, 5000);
-
-      setFilteredUsers(
-        usersList.filter((user) =>
-          user.email.toLowerCase().startsWith(searchedUser.toLowerCase())
-        )
-      );
-
-      try {
-        await fetchData();
-      } finally {
-        clearTimeout(timeoutId);
-
-        // Reset loading state to false when both search and user data fetching are done
-        if (usersList.length > 0) {
+  
+        // Show loading after 5 seconds
+        timeoutId = setTimeout(() => {
+          setIsLoading(false); 
+        }, 5000);
+  
+        try {
+          setFilteredUsers(
+            usersList.filter((user) =>
+              user.email.toLowerCase().startsWith(searchedUser.toLowerCase())
+            )
+          );
+        } finally {
+          clearTimeout(timeoutId);
+  
           setIsLoading(false);
         }
+      } else {
+        setIsLoading(false);
       }
-    } else {
-      // Reset loading state to false when the search bar is empty
-      setIsLoading(false);
-    }
-  };
-
-  handleSearch(); // Initial search without delay
-
-  return () => {
-    clearTimeout(timeoutId); // Clear the timeout on component unmount or when the search changes
-  };
-}, [searchedUser, usersList]);
+    };
+  
+    handleSearch(); // Initial search without delay
+  
+    return () => {
+      clearTimeout(timeoutId); // Clear the timeout on component unmount or when the search changes
+      setIsLoading(false); // Set loading state to false when the component unmounts
+    };
+  }, [searchedUser, usersList]);
 
   
   return (
@@ -348,14 +348,67 @@ useEffect(() => {
               placeholder="Channel Name"
               value={channelName}
               onChange={(e) => setChannelName(e.target.value)}
+              required
             />
 
-            <Input
-              placeholder="Search users..."
-              mt={4}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <Input
+            placeholder="Add members.."
+            mt={4}
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              fetchUserOptions(e.target.value);
+            }}
+          />
+
+          {isLoading ? ( // Display spinner while loading
+            <Box textAlign="center" mt={2}>
+              <Spinner size="sm" color="blue.500" />
+            </Box>
+          ) : (
+            userOptions.length > 0 && (
+                  <Box mt={2} maxHeight="150px" overflowY="auto">
+                  {userOptions.map((user) => (
+                    <Box
+                      key={user.user_id}
+                      p={2}
+                      _hover={{ bgColor: 'gray.200', cursor: 'pointer' }}
+                      onClick={() => {
+                        setAddedChannelMembers((prevMembers) => [...prevMembers, user.user_id]);
+                        setSearchTerm('');
+                        setUserOptions([]);
+                      }}
+                    >
+                      {user.email}
+                    </Box>
+                ))}
+              </Box>
+            ))}
+
+           {/* Display selected users as tags */}
+{addedChannelMembers.map((memberId) => (
+  <Flex
+    key={memberId}
+    align="center"
+    bgColor="#f0f0f0"
+    minWidth="10px"
+    borderRadius="50px"
+    paddingRight="5px"
+    paddingLeft="5px"
+    mt={2}
+  >
+    <Avatar size="2" bg="black" icon={<AiOutlineUser fontSize="1rem" />} mr={2} />
+    {usersList.find((user) => user.user_id === memberId)?.email || ''}
+    <X
+      size={16}
+      style={{ cursor: 'pointer' }}
+      onClick={() => {
+        setAddedChannelMembers((prevMembers) => prevMembers.filter((member) => member !== memberId));
+      }}
+    />
+  </Flex>
+))}
+
 
             {/* Display selected users as tags */}
             {selectedMembers.map((memberId) => (
@@ -387,7 +440,14 @@ useEffect(() => {
             <Button colorScheme="blue" bgColor="black" mr={3} onClick={handleSubmit}>
               Create
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={() => {
+                      setSearchTerm('');
+                      setChannelName('');
+                      setUserOptions([]);
+                      setSelectedMembers([]);
+                      onClose();
+                    }}
+            >Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

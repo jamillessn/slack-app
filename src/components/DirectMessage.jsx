@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { Box, Flex, Input, Button, Text, Avatar, Heading } from '@chakra-ui/react';
+import { Box, Flex, Input, Button, Text, Avatar, Heading, Spinner } from '@chakra-ui/react';
 import { AiOutlineUser } from 'react-icons/ai';
 import { useLoaderData } from 'react-router-dom';
 import { SlOptions } from "react-icons/sl";
@@ -10,6 +10,7 @@ import { BiSend } from "react-icons/bi";
 
 export const DirectMessage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [loadingMessages, setLoadingMessages] = useState(true);
   const headers = getHeaders();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]); 
@@ -17,6 +18,8 @@ export const DirectMessage = () => {
   const scrollRef = useRef(null);
   
  const getMessages = (receiver_id, headers) => {
+  setLoadingMessages(true);
+
     const options = {
       method: 'GET',
       headers: {
@@ -49,6 +52,9 @@ export const DirectMessage = () => {
         setMessages({...filteredMessages});
 
       })
+      .finally(() => {
+        setLoadingMessages(false);
+      });
 setSelectedUser(localStorage.getItem("selectedUser"));
 }
 
@@ -56,8 +62,7 @@ useEffect(() => {
   clearMessages();
   getMessages(receiver_id, headers);
   getAllUsers();
-  
-},[receiver_id]);
+}, [receiver_id]);
 
 const chatMessages = Object.keys(messages).map(msgId => {
   
@@ -198,8 +203,6 @@ useLayoutEffect(() => {
                 }
 
                 setMessages({...messages, ...filteredMessage});
-                
-                
             } else {
                 toast.error("There is an error sending message.");
             }
@@ -210,31 +213,31 @@ return (
   <>
     {/* Main Container */}
     <Box height="90vh" display="flex" flexDirection="column">
-    <Box p={3} borderBottom="1px solid #ccc" textAlign="left" position="relative">
-          
-          {/* Conversation Header */}
-          <Flex alignItems="center">
-            <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
-            <Text fontWeight="bold" fontSize="lg">
-              {selectedUser}
-            </Text>
-          </Flex>
-            
-    </Box>
+      <Box p={3} borderBottom="1px solid #ccc" textAlign="left" position="relative">
+        {/* Conversation Header */}
+        <Flex alignItems="center">
+          <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+          <Text fontWeight="bold" fontSize="lg">
+            {selectedUser}
+          </Text>
+        </Flex>
+      </Box>
       {/* Content Container */}
       <Box overflowY="auto" flex="1">
-       
-
-
         {/* Chat Messages */}
         <Box minWidth="80vw" paddingRight={7} paddingLeft={7} position="relative">
-          <Flex direction="column">
-            {chatMessages}
-            <div ref={scrollRef} />
-          </Flex>
+          {loadingMessages ? (
+            <Flex justify="center" align="center" height="100vh">
+              <Spinner size="xl" />
+            </Flex>
+          ) : (
+            <Flex direction="column">
+              {chatMessages}
+              <div ref={scrollRef} />
+            </Flex>
+          )}
         </Box>
       </Box>
-
       {/* Message Box and Send Button */}
       <Flex
         p={6}
@@ -251,13 +254,11 @@ return (
           mr={5}
           onKeyDown={handleEnter}
         />
-        <Button onClick={handleSendClick} bgColor="#0101FE" colorScheme="blue" borderRadius="%"
-         icon={<BiSend fontSize="1.5rem" />}>
-        <BiSend />
+        <Button onClick={handleSendClick} bgColor="#0101FE" colorScheme="blue" borderRadius="%">
+          <BiSend />
         </Button>
       </Flex>
     </Box>
   </>
 );
-
 };

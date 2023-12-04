@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import  ChatAppLogo  from '../assets/chatapplogo.svg';
 import {
   Button,
-  Checkbox,
   Flex,
   Text,
   FormControl,
@@ -16,8 +15,6 @@ import {
 import { toast } from 'react-toastify';
 
 const handleSubmit = async (email, password, navigate) => {
- 
-console.log(email, password)
   try {
     const res = await fetch("http://206.189.91.54/api/v1/auth/sign_in", {
       method: "POST",

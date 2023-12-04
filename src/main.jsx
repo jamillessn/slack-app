@@ -63,7 +63,7 @@ const router = createBrowserRouter([
               "Content-Type": "application/json"
             }
       })
-          return { id: params.chan_id, resData: resData}
+          return { chan_id: params.chan_id }
       }
     }
 ]}

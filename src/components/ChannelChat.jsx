@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
   Flex,
@@ -13,11 +13,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Select,
-  Tabs, TabList, TabPanels, Tab, TabPanel,
-  Spinner,
-  Avatar,
-  AvatarGroup
 } from '@chakra-ui/react';
 import { useLoaderData } from 'react-router-dom';
 import { getHeaders } from '../utils/getHeaders';
@@ -26,34 +21,68 @@ import { getChannelsList } from '../utils/getChannelsList';
 import { getAllUsers } from '../utils/getAllUsers';
 
 export const ChannelChat = () => {
-  const [selectedUser, setSelectedUser] = useState(null);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [channelData, setChannelData] = useState([]);
   const [channelList, setChannelList] = useState([]);
   const [isLoading, setIsLoading] = useState([]);
+  const [curChannel, setCurChannel] = useState('');
+  const [channelMembersId, setChannelMembersId] = useState([]);
+  const [channelMembersList, setChannelMembersList] = useState([]);
   const [message, setMessage] = useState('');
-  const scrollRef = useRef(null);
-  const headers = getHeaders();
-  const { id, resData } = useLoaderData();
-  const [chattingWithText, setChattingWithText] = useState('');
+  const { chan_id } = useLoaderData();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  
   const usersList = getAllUsers();
 
- // Use the getChannelsList function
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const channels = await getChannelsList(headers);
-      setChannelList(channels);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const scrollRef = useRef(null);
+  const headers = getHeaders();
 
+  useEffect(() => {
+    fetchData();
+    getChannelData();
+    console.log("Channel Members:", channelMembersId);
+  }, [chan_id]);
+
+ // Use the getChannelsList function
+ const fetchData = async () => {
+  try {
+    setIsLoading(true);
+    const channels = await getChannelsList(headers);
+    setChannelList(channels);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+     async function getChannelData() {
+      try {
+        const res = await fetch("http://206.189.91.54/api/v1/channels/" + chan_id , {
+          method: 'GET',
+          headers: {
+            "access-token": localStorage.getItem("access-token") || "",
+            "uid": localStorage.getItem("uid") || "",
+            "client": localStorage.getItem("client") || "",
+            "expiry": localStorage.getItem("expiry") || "",
+            "Content-Type": "application/json"
+          }
+        });
+    
+        const data = await res.json();
+        
+        // takes channel_members value from data and stores in ChannelMembersId array
+        setChannelMembersId(data.data.channel_members.map(index => index.user_id)) 
+
+      } catch (error) {
+        return [];
+      }
+      
+    }
+    
+
+
+ useEffect(() => {
   fetchData();
-}, []);
+  getChannelData();
+}, [chan_id]);
 
   //Message box handling input
   const handleSendClick = () => {
@@ -71,9 +100,9 @@ export const ChannelChat = () => {
     }
 }
 
-
 return (
   <>
+
     {/* Main Container */}
     <Box height="90vh" display="flex" flexDirection="column">
     <Box p={3} borderBottom="1px solid #ccc" textAlign="left" position="relative">
@@ -81,6 +110,7 @@ return (
           {/* Conversation Header */}
           <Box p={4} textAlign="center" position="relative">
           <Text fontWeight="bold" fontSize="lg">
+            Channel Members: 
             {selectedChannel}
           </Text>
         </Box>
