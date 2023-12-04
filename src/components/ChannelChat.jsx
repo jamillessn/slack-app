@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
   Flex,
@@ -25,14 +25,22 @@ export const ChannelChat = () => {
   const [channelData, setChannelData] = useState([]);
   const [channelList, setChannelList] = useState([]);
   const [isLoading, setIsLoading] = useState([]);
+  const [curChannel, setCurChannel] = useState('');
+  const [channelMembersId, setChannelMembersId] = useState([]);
+  const [channelMembersList, setChannelMembersList] = useState([]);
   const [message, setMessage] = useState('');
+  const { chan_id } = useLoaderData();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const usersList = getAllUsers();
+
   const scrollRef = useRef(null);
   const headers = getHeaders();
-  const { id, resData } = useLoaderData();
-  const [chattingWithText, setChattingWithText] = useState('');
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  
-  const usersList = getAllUsers();
+
+  useEffect(() => {
+    fetchData();
+    getChannelData();
+    console.log("Channel Members:", channelMembersId);
+  }, [chan_id]);
 
  // Use the getChannelsList function
  const fetchData = async () => {
@@ -45,9 +53,36 @@ export const ChannelChat = () => {
   }
 };
 
+     async function getChannelData() {
+      try {
+        const res = await fetch("http://206.189.91.54/api/v1/channels/" + chan_id , {
+          method: 'GET',
+          headers: {
+            "access-token": localStorage.getItem("access-token") || "",
+            "uid": localStorage.getItem("uid") || "",
+            "client": localStorage.getItem("client") || "",
+            "expiry": localStorage.getItem("expiry") || "",
+            "Content-Type": "application/json"
+          }
+        });
+    
+        const data = await res.json();
+        
+        // takes channel_members value from data and stores in ChannelMembersId array
+        setChannelMembersId(data.data.channel_members.map(index => index.user_id)) 
+
+      } catch (error) {
+        return [];
+      }
+      
+    }
+    
+
+
  useEffect(() => {
   fetchData();
-}, []);
+  getChannelData();
+}, [chan_id]);
 
   //Message box handling input
   const handleSendClick = () => {
@@ -67,6 +102,7 @@ export const ChannelChat = () => {
 
 return (
   <>
+
     {/* Main Container */}
     <Box height="90vh" display="flex" flexDirection="column">
     <Box p={3} borderBottom="1px solid #ccc" textAlign="left" position="relative">
@@ -74,6 +110,7 @@ return (
           {/* Conversation Header */}
           <Box p={4} textAlign="center" position="relative">
           <Text fontWeight="bold" fontSize="lg">
+            Channel Members: 
             {selectedChannel}
           </Text>
         </Box>

@@ -117,16 +117,21 @@ const Sidebar = () => {
     try {
       setIsLoading(true); // Set loading state to true
       const users = await getAllUsers();
+  
+      // Filter users based on the search term and check if they are not in addedChannelMembers
       const filteredOptions = users.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !addedChannelMembers.includes(user.user_id)
       );
+  
       setUserOptions(filteredOptions);
     } catch (error) {
       console.error('Error fetching user options:', error);
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   };
+  
   
   
 
@@ -137,10 +142,9 @@ const Sidebar = () => {
   const handleSelectChannel = (channelId) => {
     try {
       const selectedChannel = channelData.find((channel) => channel.id === channelId);
-  
+      
       if (selectedChannel) {
         localStorage.setItem('selectedChannel', selectedChannel.channel_name);
-        setSelectedChannel(localStorage.getItem('selectedChannel'));
       }
     } catch (error) {
       console.error('Error selecting channel:', error);
@@ -149,23 +153,10 @@ const Sidebar = () => {
   
   const handleSubmit = () => {
     const userIDs = [selectedMembers];
-    handleCreateChannel(channelName, userIDs);
     onClose();
+    handleCreateChannel(channelName, userIDs);
+    fetchData();
   };
-
-  //Retrives id and channel_name from getChannelsList
-  useEffect(()=> {
-    const getChannelData = async() => {
-      try {
-        const channelsData = await getChannelsList(headers);
-        setChannelData(channelsData);
-      } catch (error) {
-        console.log('Error fetching channels', error);
-      }
-    };
-  
-    getChannelData();
-  }, []);
 
 
   const CustomOption = ({ innerProps, label }) => (
@@ -179,7 +170,6 @@ const Sidebar = () => {
     (
    
     <Link key={channel.id} to={`/app/channels/${channel.id}`} 
-    onClick={handleSelectChannel(channel.name)}
     >
       <Box
         _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
@@ -377,49 +367,48 @@ const Sidebar = () => {
             </Box>
           ) : (
             userOptions.length > 0 && (
-              <Box mt={2} maxHeight="150px" overflowY="auto">
-                {userOptions.map((user) => (
-                  <Box
-                    key={user.user_id}
-                    p={2}
-                    _hover={{ bgColor: 'gray.200', cursor: 'pointer' }}
-                    onClick={() => {
-                      setAddedChannelMembers((prevMembers) => [...prevMembers, user.user_id]);
-                      setSearchTerm('');
-                      setUserOptions([]);
-                      console.log(channelName, addedChannelMembers)
-                    }}
-                  >
-                    {user.email}
-                  </Box>
+                  <Box mt={2} maxHeight="150px" overflowY="auto">
+                  {userOptions.map((user) => (
+                    <Box
+                      key={user.user_id}
+                      p={2}
+                      _hover={{ bgColor: 'gray.200', cursor: 'pointer' }}
+                      onClick={() => {
+                        setAddedChannelMembers((prevMembers) => [...prevMembers, user.user_id]);
+                        setSearchTerm('');
+                        setUserOptions([]);
+                      }}
+                    >
+                      {user.email}
+                    </Box>
                 ))}
               </Box>
-            )
-          )}
-
-            {/* Display selected users as tags */}
-            {addedChannelMembers.map((memberId) => (
-              <Flex
-                key={memberId}
-                align="center"
-                bgColor="#f0f0f0"
-                minWidth="10px"
-                borderRadius="50px"
-                paddingRight="5px"
-                paddingLeft="5px"
-                mt={2}
-              >
-                <Avatar size="2" bg="black" icon={<AiOutlineUser fontSize="1rem" />} mr={2} />
-                {usersList.find((user) => user.user_id === memberId)?.email || ''}
-                <X
-                  size={16}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    setSelectedMembers((prevMembers) => prevMembers.filter((member) => member !== memberId));
-                  }}
-                />
-              </Flex>
             ))}
+
+           {/* Display selected users as tags */}
+{addedChannelMembers.map((memberId) => (
+  <Flex
+    key={memberId}
+    align="center"
+    bgColor="#f0f0f0"
+    minWidth="10px"
+    borderRadius="50px"
+    paddingRight="5px"
+    paddingLeft="5px"
+    mt={2}
+  >
+    <Avatar size="2" bg="black" icon={<AiOutlineUser fontSize="1rem" />} mr={2} />
+    {usersList.find((user) => user.user_id === memberId)?.email || ''}
+    <X
+      size={16}
+      style={{ cursor: 'pointer' }}
+      onClick={() => {
+        setAddedChannelMembers((prevMembers) => prevMembers.filter((member) => member !== memberId));
+      }}
+    />
+  </Flex>
+))}
+
 
           </ModalBody>
 
@@ -429,6 +418,7 @@ const Sidebar = () => {
             </Button>
             <Button onClick={() => {
                       setSearchTerm('');
+                      setChannelName('');
                       setUserOptions([]);
                       setSelectedMembers([]);
                       onClose();
