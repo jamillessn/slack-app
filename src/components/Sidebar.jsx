@@ -410,6 +410,30 @@ const Sidebar = () => {
 ))}
 
 
+            {/* Display selected users as tags */}
+            {selectedMembers.map((memberId) => (
+              <Flex
+                key={memberId}
+                align="center"
+                bgColor="#f0f0f0"
+                minWidth="10px"
+                borderRadius="50px"
+                paddingRight="5px"
+                paddingLeft="5px"
+                mt={2}
+              >
+                <Avatar size="2" bg="black" icon={<AiOutlineUser fontSize="1rem" />} mr={2} />
+                {usersList.find((user) => user.user_id === memberId)?.email || ''}
+                <X
+                  size={16}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    setSelectedMembers((prevMembers) => prevMembers.filter((member) => member !== memberId));
+                  }}
+                />
+              </Flex>
+            ))}
+
           </ModalBody>
 
           <ModalFooter>
