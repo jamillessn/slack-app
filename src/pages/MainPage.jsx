@@ -46,9 +46,18 @@ const App = () => {
   const handleSignOut = () => {
     setCurrentUser(null);
     setConversation([]);
-    localStorage.clear();
+    
+    // Specify the keys to clear
+    const keysToClear = ["access-token", "uid", "client", "expiry", "selectedUser"];
+  
+    // Clear specific keys from localStorage using a loop
+    keysToClear.forEach(key => {
+      localStorage.removeItem(key);
+    });
+  
     navigate('/');
   };
+  
 
   
   return (
