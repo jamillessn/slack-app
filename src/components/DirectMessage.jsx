@@ -5,6 +5,7 @@ import { useLoaderData } from 'react-router-dom';
 import { SlOptions } from "react-icons/sl";
 import { getAllUsers } from '../utils/getAllUsers';
 import { getHeaders } from '../utils/getHeaders';
+import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { BiSend } from "react-icons/bi";
 
@@ -72,9 +73,6 @@ const chatMessages = Object.keys(messages).map(msgId => {
   const senderName = isCurrentUser ? 'You' : msg.sender.split('@')[0];
   const formattedDate = format(new Date(msg.created_at), 'M/dd/yyyy h:mm a');
   
-  if(!messages){
-    console.log('No Messages');
-  }
     if(!isCurrentUser){
       return (
         <div key={msgId} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>

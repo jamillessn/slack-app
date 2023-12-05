@@ -132,25 +132,12 @@ const Sidebar = () => {
     }
   };
   
-  
-  
 
   const openModal = () => {
     onOpen();
   };
 
-  const handleSelectChannel = (channelId) => {
-    try {
-      const selectedChannel = channelData.find((channel) => channel.id === channelId);
-      
-      if (selectedChannel) {
-        localStorage.setItem('selectedChannel', selectedChannel.channel_name);
-      }
-    } catch (error) {
-      console.error('Error selecting channel:', error);
-    }
-  };
-  
+
   const handleSubmit = () => {
     const userIDs = [selectedMembers];
     onClose();
@@ -159,12 +146,6 @@ const Sidebar = () => {
   };
 
 
-  const CustomOption = ({ innerProps, label }) => (
-    <div {...innerProps}>
-      <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
-      {label}
-    </div>
-  );
 
   const displayChannels = channelList.map(channel => 
     (
@@ -176,6 +157,7 @@ const Sidebar = () => {
         mb={2}
         pb={2}
         borderRadius="md"
+        
       >
         <Flex align="center" mb={2} >
           <IconContext.Provider
@@ -196,20 +178,6 @@ const Sidebar = () => {
     </Link>
   ));
   
-  const CustomMultiValue = ({ data, innerProps, removeProps }) => (
-    <Flex align="center" {...innerProps} bgColor="#f0f0f0" minWidth="10px" borderRadius="50px" paddingRight="5px" paddingLeft="5px">
-      <Avatar size="2" bg="black" icon={<AiOutlineUser fontSize="1rem" />} mr={2} />
-      {data.label}
-      <X
-        size={16}
-        style={{ cursor: 'pointer' }}
-        onClick={(e) => {
-          removeProps.onClick(e);
-          setChannelMembers(channelMembers.filter((member) => member !== data.value));
-        }}
-      />
-    </Flex>
-  );
 
   async function fetchData() {
     try {
