@@ -7,8 +7,10 @@ import {
   Button,
   Spinner,
   useDisclosure,
-  Heading
+  Avatar,
+
 } from '@chakra-ui/react';
+import { AiOutlineUser } from 'react-icons/ai';
 import { useLoaderData } from 'react-router-dom';
 import { getHeaders } from '../utils/getHeaders';
 import { BiSend } from "react-icons/bi";
@@ -18,13 +20,12 @@ import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 
 export const ChannelChat = () => {
-  const [selectedChannel, setSelectedChannel] = useState(null);
   const [channelData, setChannelData] = useState([]);
   const [channelList, setChannelList] = useState([]);
   const [isLoading, setIsLoading] = useState([]);
-  const [curChannel, setCurChannel] = useState('');
   const [channelMembersId, setChannelMembersId] = useState([]);
   const [channelMembersList, setChannelMembersList] = useState([]);
+  const [channelName, setChannelName] = useState('');
   const [channelMessages, setChannelMessages] = useState([]);
   const [message, setMessage] = useState('');
   const { chan_id } = useLoaderData();
@@ -61,29 +62,34 @@ export const ChannelChat = () => {
   };
 
 
-     async function getChannelData() {
-      try {
-        const res = await fetch("http://206.189.91.54/api/v1/channels/" + chan_id , {
-          method: 'GET',
-          headers: {
-            "access-token": localStorage.getItem("access-token") || "",
-            "uid": localStorage.getItem("uid") || "",
-            "client": localStorage.getItem("client") || "",
-            "expiry": localStorage.getItem("expiry") || "",
-            "Content-Type": "application/json"
-          }
-        });
-    
-        const data = await res.json();
-        
-        // takes channel_members value from data and stores in ChannelMembersId array
-        setChannelMembersId(data.data.channel_members.map(index => index.user_id)) 
-
-      } catch (error) {
-        return [];
-      }
+  const getChannelData = async () => {
+    try {
+      const res = await fetch("http://206.189.91.54/api/v1/channels/" + chan_id, {
+        method: 'GET',
+        headers: {
+          "access-token": localStorage.getItem("access-token") || "",
+          "uid": localStorage.getItem("uid") || "",
+          "client": localStorage.getItem("client") || "",
+          "expiry": localStorage.getItem("expiry") || "",
+          "Content-Type": "application/json"
+        }
+      });
+  
+      const data = await res.json();
       
+      console.log(data)
+
+      setChannelName(data.name)
+
+      console.log(data.name)
+      // takes channel_members value from data and stores in ChannelMembersId array
+      setChannelMembersId(data.data.channel_members.map(index => index.user_id));
+
+    } catch (error) {
+      console.error(error);
     }
+  };
+  
 
  useEffect(() => {
   fetchData();
@@ -142,6 +148,72 @@ const handleSendChannelMessage = () => {
   setMessage('');
 };
 
+const channelChatMessages = Object.keys(channelMessages).map(index => {
+  
+  const msg = channelMessages[index];
+  const isCurrentUser = msg.sender === headers.uid;
+
+  const senderName = isCurrentUser ? 'You' : msg.sender.split('@')[0];
+  const formattedDate = format(new Date(msg.date), 'M/dd/yyyy h:mm a');
+  
+    if(!isCurrentUser){
+      return (
+        <div key={index} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+          <Flex key={index} style={{ marginTop: 12 }} justify={isCurrentUser ? 'flex-end' : 'flex-start'}>
+  {!isCurrentUser && (
+    <Avatar bg="black" icon={<AiOutlineUser fontSize="1.5rem" />} mr={2} />
+  )}
+  <Box>
+    <Flex align={isCurrentUser ? 'flex-end' : 'flex-start'} alignItems="center">
+    <Text color='black' fontSize={15} fontWeight={700} mb={1}>
+        {senderName}  &nbsp;
+      </Text>
+      <Text color='gray' fontSize={11}> {formattedDate} </Text>
+    </Flex>
+
+    <Flex direction="column" >
+     
+      <Text
+        p={2}
+        borderRadius="md"
+        display="inline-block"
+        maxWidth="70%"
+        bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
+        color={isCurrentUser ? 'white' : 'black'}
+      >
+        {msg.message}
+      </Text>
+    </Flex>
+  </Box>
+</Flex>
+        </div>
+      );
+    }
+
+    else { 
+      return (
+      <div key={index} style={{ textAlign: isCurrentUser ? 'right' : 'left', marginTop: 12 }}>
+        <Text 
+          p={2} 
+          borderRadius="md" 
+          display="inline-block" 
+          maxWidth="70%"
+          bgColor={isCurrentUser ? '#0101FE' : 'gray.200'}
+          color={isCurrentUser ? 'white' : 'black'}
+        >
+         
+          <Text textAlign="left">
+          {msg.message}
+            </Text>
+        </Text>
+        <Flex alignItems="center" justifyContent="flex-end">
+          <Text color='gray' fontSize={11}> {formattedDate} </Text>
+         </Flex>
+      </div>
+    );}
+   
+});
+
 
 useLayoutEffect(() => {
   scrollToBottom();
@@ -156,17 +228,19 @@ useLayoutEffect(() => {
 
   return (
     <>
-      {/* Main Container */}
-      <Box height="90vh" display="flex" flexDirection="column">
+    {/* Main Container */}
+    <Box height="90vh" display="flex" flexDirection="column">
         <Box p={3} borderBottom="1px solid #ccc" textAlign="left" position="relative">
           {/* Conversation Header */}
           <Box p={4} textAlign="center" position="relative">
+            {/* Use the updated channelName state here */}
             <Text fontWeight="bold" fontSize="lg">
-              Channel Members: {channelMembersId}
+              Channel Name: {channelName}
             </Text>
           </Box>
         </Box>
-        {/* Content Container */}
+
+        {/* Messages container*/}
         <Box overflowY="auto" flex="1">
           {/* Display Spinner while loading */}
           {isLoading ? (
@@ -176,32 +250,21 @@ useLayoutEffect(() => {
           ) : (
             /* Display Messages or "No conversation yet" text */
             <Box minWidth="80vw" paddingRight={7} paddingLeft={7} position="relative">
-              {channelMessages.length > 0 ? (
+              {channelChatMessages.length > 0 ? (
                 // Display Messages
-                channelMessages.map((messageObject, index) => (
-                  <Box
-                    key={index}
-                    p={2}
-                    borderRadius="8px"
-                    bg={messageObject.sender === "senderId" ? "blue.500" : "gray.300"}
-                    color={messageObject.sender === "senderId" ? "white" : "black"}
-                  >
-                    <Text>{messageObject.sender}</Text>
-                    <Text>{messageObject.message}</Text>
-                    <Text>{messageObject.date.toString()}</Text>
-                  </Box>
-                ))
+                channelChatMessages
               ) : (
                 // Display "No conversation yet" text
-                <Flex justifyContent="center" alignItems="center">
-                    <Text fontWeight="bold" fontSize="lg">
-                      No conversation yet. 
-                    </Text>
+                <Flex justifyContent="center" alignItems="center" paddingTop="25%">
+                  <Text fontWeight="bold" fontSize="lg">
+                    No conversation yet.
+                  </Text>
                 </Flex>
               )}
             </Box>
           )}
         </Box>
+
         {/* Message Box and Send Button */}
         <Flex
           p={6}
