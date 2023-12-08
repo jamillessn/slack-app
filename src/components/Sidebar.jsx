@@ -93,21 +93,17 @@ const Sidebar = () => {
   
       const responseData = await res.json();
   
-      console.log(responseData)
-      if (!responseData.errors[0]) {
+      
         toast.success('Channel created!', {
           position: toast.POSITION.TOP_CENTER,
           autoClose: 2000,
         });
-      } else {
-        toast.error(responseData.errors[0], {
-          position: toast.POSITION.TOP_CENTER,
-          autoClose: 2000,
-        });
-      }
+        
+
     } catch (error) {
-      toast.error(error.error, {
+      toast.error(error.errors[0], {
         position: toast.POSITION.TOP_CENTER,
+        autoClose: 2000,
       });
     }
   };
@@ -120,7 +116,7 @@ const Sidebar = () => {
   
       // Filter users based on the search term and check if they are not in addedChannelMembers
       const filteredOptions = users.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        user.email.toLowerCase().startsWith(searchTerm.toLowerCase()) &&
         !addedChannelMembers.includes(user.user_id)
       );
   
@@ -137,7 +133,6 @@ const Sidebar = () => {
     onOpen();
   };
 
-
   const handleSubmit = () => {
     const userIDs = [selectedMembers];
     onClose();
@@ -145,38 +140,41 @@ const Sidebar = () => {
     fetchData();
   };
 
+  const displayChannels =
+  (channelList && channelList.length > 0) ? (
+    channelList.map((channel) => (
+      <Link key={channel.id} to={`/app/channels/${channel.id}`}>
+        <Box
+          _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
+          mb={2}
+          pb={2}
+          borderRadius="md"
+        >
+          <Flex align="center" mb={2} >
+            <IconContext.Provider
+              value={{ color: 'white', size: '20px' }}
+            >
+              <AvatarGroup size="md" max={2} mr={2}>
+                <Avatar bg='black' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
+                <Avatar bg='blue' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
+              </AvatarGroup>
+            </IconContext.Provider>
+            <Text
+              style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "700"}}
+            >
+              {channel.channel_name}
+            </Text>
+          </Flex>
+        </Box>
+      </Link>
+    ))
+  ) : (
+    // Render a spinner while channels are loading
+    <Box textAlign="center" mt={4}>
+      <Spinner size="xl" color="blue.500" />
+    </Box>
+  );
 
-
-  const displayChannels = channelList.map(channel => 
-    (
-   
-    <Link key={channel.id} to={`/app/channels/${channel.id}`} 
-    >
-      <Box
-        _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
-        mb={2}
-        pb={2}
-        borderRadius="md"
-        
-      >
-        <Flex align="center" mb={2} >
-          <IconContext.Provider
-            value={{ color: 'white', size: '20px' }}
-          >
-          <AvatarGroup size="md" max={2} mr={2}>
-          <Avatar bg='black' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
-          <Avatar bg='blue' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
-          </AvatarGroup>
-          </IconContext.Provider>
-          <Text
-            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "700"}}
-          >
-            {channel.channel_name}
-          </Text>
-        </Flex>
-      </Box>
-    </Link>
-  ));
   
 
   async function fetchData() {
@@ -271,12 +269,14 @@ const Sidebar = () => {
               onChange={(e) => setSearchedUser(e.target.value)}
             />
 
-            {searchedUser.trim() !== '' && filteredUsers.map((user) => (
-              <Link
-                to={`/app/m/${user.user_id}`}
-                key={user.user_id}
-                onClick={() => handleSelectUser(user)}
-              >
+            {searchedUser.trim() !== '' &&
+              filteredUsers &&
+              filteredUsers.map((user) => (
+                <Link
+                  to={`/app/m/${user.user_id}`}
+                  key={user.user_id}
+                  onClick={() => handleSelectUser(user)}
+                >
                 <Box
                   _hover={{ bgColor: 'gray.300', cursor: 'pointer' }}
                   mb={2}
@@ -296,7 +296,7 @@ const Sidebar = () => {
             ))}
 
             {/* Display loading animation while fetching data */}
-            {isLoading && (
+            {isLoading !== undefined && isLoading && (
               <Box textAlign="center" mt={4}>
                 <Spinner size="xl" color="blue.500" />
               </Box>

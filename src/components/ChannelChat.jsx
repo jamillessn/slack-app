@@ -8,8 +8,9 @@ import {
   Spinner,
   useDisclosure,
   Avatar,
-
+  AvatarGroup
 } from '@chakra-ui/react';
+import { IconContext } from "react-icons";
 import { AiOutlineUser } from 'react-icons/ai';
 import { useLoaderData } from 'react-router-dom';
 import { getHeaders } from '../utils/getHeaders';
@@ -77,11 +78,9 @@ export const ChannelChat = () => {
   
       const data = await res.json();
       
-      console.log(data)
 
-      setChannelName(data.name)
+      setChannelName(data.data.name)
 
-      console.log(data.name)
       // takes channel_members value from data and stores in ChannelMembersId array
       setChannelMembersId(data.data.channel_members.map(index => index.user_id));
 
@@ -232,11 +231,23 @@ useLayoutEffect(() => {
     <Box height="90vh" display="flex" flexDirection="column">
         <Box p={3} borderBottom="1px solid #ccc" textAlign="left" position="relative">
           {/* Conversation Header */}
-          <Box p={4} textAlign="center" position="relative">
+          <Box p={4} position="relative">
             {/* Use the updated channelName state here */}
-            <Text fontWeight="bold" fontSize="lg">
-              Channel Name: {channelName}
+            <Flex align="center" mb={2} >
+            <IconContext.Provider
+              value={{ color: 'white', size: '20px' }}
+            >
+              <AvatarGroup size="md" max={2} mr={2}>
+                <Avatar bg='black' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
+                <Avatar bg='blue' icon={<AiOutlineUser fontSize='1.5rem' />} mr={4} />
+              </AvatarGroup>
+            </IconContext.Provider>
+            <Text
+              style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "700"}}
+            >
+              {channelName}
             </Text>
+          </Flex>
           </Box>
         </Box>
 
